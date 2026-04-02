@@ -186,7 +186,7 @@ data:
           "tls": false,
           "proxy": [
             {
-              "path": "/workspaces/api",
+              "path": "/notebooks/api",
               "pathRewrite": "/api"
             }
           ],

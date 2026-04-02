@@ -4,6 +4,7 @@ resources:
   - ../core-bases/base
   - federation-configmap.yaml
   - networkpolicy.yaml
+  - notebooks-rbac.yaml
 configMapGenerator:
   - name: modular-architecture-params
     env: params.env
