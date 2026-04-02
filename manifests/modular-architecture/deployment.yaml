@@ -628,9 +628,9 @@
     imagePullPolicy: Always
     livenessProbe:
       httpGet:
-        path: /healthcheck
-        port: 8343
-        scheme: HTTPS
+        path: /api/v1/healthcheck
+        port: 8843
+        scheme: HTTP
       initialDelaySeconds: 30
       timeoutSeconds: 15
       periodSeconds: 30
@@ -638,9 +638,9 @@
       failureThreshold: 3
     readinessProbe:
       httpGet:
-        path: /healthcheck
-        port: 8343
-        scheme: HTTPS
+        path: /api/v1/healthcheck
+        port: 8843
+        scheme: HTTP
       initialDelaySeconds: 15
       timeoutSeconds: 15
       periodSeconds: 30
@@ -654,11 +654,13 @@
         cpu: 300m
         memory: 512Mi
     ports:
-      - containerPort: 8343
+      - containerPort: 8843
         name: notebooks-ui
-    args:
-      - '--port=8343'
-      - '--disable-auth=true'
+    env:
+      - name: PORT
+        value: "8843"
+      - name: DISABLE_AUTH
+        value: "true"
     securityContext:
       allowPrivilegeEscalation: false
       capabilities:

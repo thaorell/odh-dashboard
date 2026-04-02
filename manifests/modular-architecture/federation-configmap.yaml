@@ -180,15 +180,24 @@ data:
         }
       },
       {
-        "name": "notebooks",
-        "remoteEntry": "/remoteEntry.js",
-        "authorize": false,
-        "tls": false,
-        "proxy": [
-          {
-            "path": "/notebooks/api",
-            "pathRewrite": "/api"
+          "name": "notebooks",
+          "remoteEntry": "/remoteEntry.js",
+          "authorize": true,
+          "tls": false,
+          "proxy": [
+            {
+              "path": "/workspaces/api",
+              "pathRewrite": "/api"
+            }
+          ],
+          "local": {
+            "host": "localhost",
+            "port": 8080
+          },
+          "service": {
+            "name": "odh-dashboard",
+            "namespace": "opendatahub",
+            "port": 8843
           }
-        ]
       }
     ]
