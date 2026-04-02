@@ -27,4 +27,7 @@ type EnvConfig struct {
 	UserIdHeader string
 	UserIdPrefix string
 	GroupsHeader string
+
+	// StaticAssetsDir is the directory containing frontend static assets
+	StaticAssetsDir string
 }

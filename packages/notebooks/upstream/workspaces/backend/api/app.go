@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"path"
 
 	"github.com/julienschmidt/httprouter"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -140,5 +141,29 @@ func (a *App) Routes() http.Handler {
 	// swagger
 	router.GET(SwaggerPath, a.GetSwaggerHandler)
 
-	return a.recoverPanic(a.enableCORS(router))
+	// Create a mux to combine API routes with static file serving
+	mux := http.NewServeMux()
+
+	// API routes - handle /api/v1/* paths
+	mux.Handle(PathPrefix+"/", a.recoverPanic(a.enableCORS(router)))
+
+	// Static file server for frontend assets (Module Federation support)
+	if a.Config.StaticAssetsDir != "" {
+		staticDir := http.Dir(a.Config.StaticAssetsDir)
+		fileServer := http.FileServer(staticDir)
+		mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+			// Check if the requested file exists in static dir
+			if _, err := staticDir.Open(r.URL.Path); err == nil {
+				a.logger.Debug("Serving static file", slog.String("path", r.URL.Path))
+				fileServer.ServeHTTP(w, r)
+				return
+			}
+
+			// Fallback to index.html for SPA routes
+			a.logger.Debug("Static asset not found, serving index.html", slog.String("path", r.URL.Path))
+			http.ServeFile(w, r, path.Join(a.Config.StaticAssetsDir, "index.html"))
+		})
+	}
+
+	return mux
 }
