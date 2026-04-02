@@ -47,3 +47,10 @@
     protocol: TCP
     port: 8743
     targetPort: 8743
+- op: add
+  path: /spec/ports/-
+  value:
+    name: notebooks-ui
+    protocol: TCP
+    port: 8343
+    targetPort: 8343

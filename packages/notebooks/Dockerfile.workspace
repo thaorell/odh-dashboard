@@ -64,19 +64,15 @@ ARG TARGETARCH
 
 WORKDIR /usr/src/app
 
-USER root
-RUN mkdir bff && chown -R default:root /usr/src/app
-USER default
-
 # Copy the Go Modules manifests
 COPY --chown=default:root ${BFF_SOURCE_CODE}/go.mod ${BFF_SOURCE_CODE}/go.sum ./
-COPY --chown=default:root ${CONTROLLER_SOURCE_CODE} ./controller
-COPY --chown=default:root ${BFF_SOURCE_CODE} ./backend
 
-# Rewrite the go.mod to update the replace directive and download dependencies
+# Copy the controller module (required by backend's go.mod replace directive)
+COPY --chown=default:root ${CONTROLLER_SOURCE_CODE} ./controller
+
+# Rewrite the go.mod to update the replace directive for controller and download dependencies
 RUN go mod edit \
-    -replace=github.com/kubeflow/notebooks/workspaces/controller=./controller \
-    -replace=github.com/kubeflow/notebooks/workspaces/backend=./backend && \
+    -replace=github.com/kubeflow/notebooks/workspaces/controller=./controller && \
     go mod download
 
 # Copy the go source files

@@ -73,10 +73,17 @@ vars:
   - name: autorag-pipeline-runtime-image
     objref:
       kind: ConfigMap
-      name: modular-architecture-params
+      name: autorag-params
       apiVersion: v1
     fieldref:
       fieldpath: data.autorag-pipeline-runtime-image
+  - name: notebooks-ui-image
+    objref:
+      kind: ConfigMap
+      name: modular-architecture-params
+      apiVersion: v1
+    fieldref:
+      fieldpath: data.notebooks-ui-image
 configurations:
   - params.yaml
 patchesJson6902:
