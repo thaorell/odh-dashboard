@@ -55,6 +55,7 @@ export type DashboardConfig = K8sResourceCommon & {
       autorag: boolean;
       modelAsService: boolean;
       mlflow: boolean;
+      notebooksV2: boolean;
       mcpCatalog: boolean;
       aiAssetCustomEndpoints: boolean;
       disableLLMd: boolean;

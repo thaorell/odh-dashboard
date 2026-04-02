@@ -1303,6 +1303,7 @@ export type DashboardCommonConfig = {
   modelAsService?: boolean;
   aiAssetCustomEndpoints?: boolean;
   mlflow?: boolean;
+  notebooksV2?: boolean;
   mcpCatalog?: boolean;
   projectRBAC?: boolean;
   observabilityDashboard?: boolean;

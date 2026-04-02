@@ -117,6 +117,8 @@ spec:
                       type: boolean
                     mlflow:
                       type: boolean
+                    notebooksV2:
+                      type: boolean
                     projectRBAC:
                       type: boolean
                     trainingJobs:

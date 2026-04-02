@@ -95,6 +95,9 @@ export enum SupportedArea {
   /* MLflow */
   MLFLOW = 'mlflow',
 
+  /* Notebooks V2 (Workspaces) */
+  NOTEBOOKS_V2 = 'notebooks-v2',
+
   /* Project RBAC Settings */
   PROJECT_RBAC_SETTINGS = 'project-rbac-settings',
 }

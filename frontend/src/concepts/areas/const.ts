@@ -9,6 +9,7 @@ export const techPreviewFlags = {
   modelAsService: false,
   aiAssetCustomEndpoints: false,
   mlflow: false,
+  notebooksV2: false,
   mcpCatalog: false,
   projectRBAC: true,
   observabilityDashboard: false,
@@ -218,6 +219,9 @@ export const SupportedAreasStateMap: SupportedAreasState = {
   [SupportedArea.MLFLOW]: {
     featureFlags: ['mlflow'],
     requiredComponents: [DataScienceStackComponent.MLFLOW],
+  },
+  [SupportedArea.NOTEBOOKS_V2]: {
+    featureFlags: ['notebooksV2'],
   },
   [SupportedArea.PROJECT_RBAC_SETTINGS]: {
     featureFlags: ['projectRBAC'],
