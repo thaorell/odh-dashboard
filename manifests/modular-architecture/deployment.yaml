@@ -1,4 +1,16 @@
 - op: add
+  path: /spec/template/spec/volumes/-
+  value:
+    name: federation-config
+    configMap:
+      name: federation-config
+- op: add
+  path: /spec/template/spec/containers/0/volumeMounts/-
+  value:
+    name: federation-config
+    mountPath: /usr/src/app/data/module-federation-config.json
+    subPath: module-federation-config.json
+- op: add
   path: /spec/template/spec/containers/0/env/-
   value:
     name: MODULE_FEDERATION_CONFIG
@@ -661,6 +673,12 @@
         value: "8843"
       - name: DISABLE_AUTH
         value: "true"
+      - name: USERID_HEADER
+        value: "X-Auth-Request-User"
+      - name: USERID_PREFIX
+        value: ""
+      - name: GROUPS_HEADER
+        value: "X-Auth-Request-Groups"
     securityContext:
       allowPrivilegeEscalation: false
       capabilities:

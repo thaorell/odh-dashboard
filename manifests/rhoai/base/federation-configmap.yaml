@@ -178,5 +178,26 @@ data:
             "namespace": "redhat-ods-applications",
             "port": 8443
         }
+      },
+      {
+        "name": "notebooks",
+        "remoteEntry": "/remoteEntry.js",
+        "authorize": true,
+        "tls": false,
+        "proxy": [
+          {
+            "path": "/notebooks/api",
+            "pathRewrite": "/api"
+          }
+        ],
+        "local": {
+          "host": "localhost",
+          "port": 8080
+        },
+        "service": {
+          "name": "rhods-dashboard",
+          "namespace": "redhat-ods-applications",
+          "port": 8843
+        }
       }
     ]
