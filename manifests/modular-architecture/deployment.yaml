@@ -510,3 +510,48 @@
       capabilities:
         drop:
           - ALL
+
+- op: add
+  path: /spec/template/spec/containers/-
+  value:
+    name: notebooks-ui
+    image: $(notebooks-ui-image)
+    imagePullPolicy: Always
+    livenessProbe:
+      httpGet:
+        path: /healthcheck
+        port: 8343
+        scheme: HTTPS
+      initialDelaySeconds: 30
+      timeoutSeconds: 15
+      periodSeconds: 30
+      successThreshold: 1
+      failureThreshold: 3
+    readinessProbe:
+      httpGet:
+        path: /healthcheck
+        port: 8343
+        scheme: HTTPS
+      initialDelaySeconds: 15
+      timeoutSeconds: 15
+      periodSeconds: 30
+      successThreshold: 1
+      failureThreshold: 3
+    resources:
+      limits:
+        cpu: 300m
+        memory: 512Mi
+      requests:
+        cpu: 300m
+        memory: 512Mi
+    ports:
+      - containerPort: 8343
+        name: notebooks-ui
+    args:
+      - '--port=8343'
+      - '--disable-auth=true'
+    securityContext:
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop:
+          - ALL

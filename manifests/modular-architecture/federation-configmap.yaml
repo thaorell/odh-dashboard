@@ -178,5 +178,17 @@ data:
             "namespace": "opendatahub",
             "port": 8443
         }
+      },
+      {
+        "name": "notebooks",
+        "remoteEntry": "/remoteEntry.js",
+        "authorize": false,
+        "tls": false,
+        "proxy": [
+          {
+            "path": "/notebooks/api",
+            "pathRewrite": "/api"
+          }
+        ]
       }
     ]

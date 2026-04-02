@@ -64,24 +64,22 @@ ARG TARGETARCH
 
 WORKDIR /usr/src/app
 
-RUN mkdir bff
-
 # Copy the Go Modules manifests
-COPY ${BFF_SOURCE_CODE}/go.mod ${BFF_SOURCE_CODE}/go.sum ./
-COPY ${CONTROLLER_SOURCE_CODE} ./controller
-COPY ${BFF_SOURCE_CODE} ./backend
+COPY --chown=default:root ${BFF_SOURCE_CODE}/go.mod ${BFF_SOURCE_CODE}/go.sum ./
 
-# Rewrite the go.mod to update the replace directive and download dependencies
+# Copy the controller module (required by backend's go.mod replace directive)
+COPY --chown=default:root ${CONTROLLER_SOURCE_CODE} ./controller
+
+# Rewrite the go.mod to update the replace directive for controller and download dependencies
 RUN go mod edit \
-    -replace=github.com/kubeflow/notebooks/workspaces/controller=./controller \
-    -replace=github.com/kubeflow/notebooks/workspaces/backend=./backend && \
+    -replace=github.com/kubeflow/notebooks/workspaces/controller=./controller && \
     go mod download
 
 # Copy the go source files
-COPY ${BFF_SOURCE_CODE}/cmd/ cmd/
-COPY ${BFF_SOURCE_CODE}/api/ api/
-COPY ${BFF_SOURCE_CODE}/internal/ internal/
-COPY ${BFF_SOURCE_CODE}/openapi/ openapi/
+COPY --chown=default:root ${BFF_SOURCE_CODE}/cmd/ cmd/
+COPY --chown=default:root ${BFF_SOURCE_CODE}/api/ api/
+COPY --chown=default:root ${BFF_SOURCE_CODE}/internal/ internal/
+COPY --chown=default:root ${BFF_SOURCE_CODE}/openapi/ openapi/
 
 # Build the Go application
 RUN CGO_ENABLED=1 GOOS=${TARGETOS:-linux} GOARCH=${TARGETARCH} go build -a -ldflags="-s -w" -tags strictfipsruntime -o bff ./cmd
