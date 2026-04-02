@@ -47,6 +47,9 @@ const (
 	// healthcheck
 	HealthCheckPath = PathPrefix + "/healthcheck"
 
+	// user
+	UserPath = PathPrefix + "/user"
+
 	// workspaces
 	AllWorkspacesPath         = PathPrefix + "/workspaces"
 	WorkspacesByNamespacePath = AllWorkspacesPath + "/:" + NamespacePathParam
@@ -113,6 +116,9 @@ func (a *App) Routes() http.Handler {
 
 	// healthcheck
 	router.GET(HealthCheckPath, a.GetHealthcheckHandler)
+
+	// user
+	router.GET(UserPath, a.GetUserHandler)
 
 	// namespaces
 	router.GET(AllNamespacesPath, a.GetNamespacesHandler)

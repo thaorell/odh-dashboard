@@ -23,9 +23,9 @@ const extensions: (NavExtension | RouteExtension | AreaExtension)[] = [
     properties: {
       id: 'notebooks-kf-workspaces',
       title: 'Workspaces',
-      href: '/workspaces',
+      href: '/notebooks/workspaces',
       section: 'ai-hub',
-      path: '/workspaces/*',
+      path: '/notebooks/workspaces/*',
       group: '1_aihub',
     },
   },
@@ -37,9 +37,9 @@ const extensions: (NavExtension | RouteExtension | AreaExtension)[] = [
     properties: {
       id: 'notebooks-kf-workspacekinds',
       title: 'Workspace Kinds',
-      href: '/workspacekinds',
+      href: '/notebooks/workspacekinds',
       section: 'ai-hub',
-      path: '/workspacekinds/*',
+      path: '/notebooks/workspacekinds/*',
       group: '1_aihub',
     },
   },
@@ -49,17 +49,7 @@ const extensions: (NavExtension | RouteExtension | AreaExtension)[] = [
       required: [NOTEBOOKS_V2],
     },
     properties: {
-      path: '/workspaces/*',
-      component: () => import('./NotebooksWrapper'),
-    },
-  },
-  {
-    type: 'app.route',
-    flags: {
-      required: [NOTEBOOKS_V2],
-    },
-    properties: {
-      path: '/workspacekinds/*',
+      path: '/notebooks/*',
       component: () => import('./NotebooksWrapper'),
     },
   },
