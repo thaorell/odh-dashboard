@@ -130,6 +130,14 @@ func main() {
 		openapi.SwaggerInfo.BasePath = cfg.SwaggerBasePath
 		openapi.SwaggerInfo.Schemes = []string{cfg.SwaggerScheme}
 	}
+	flag.StringVar(
+		&cfg.StaticAssetsDir,
+		"static-assets-dir",
+		getEnvAsStr("STATIC_ASSETS_DIR", "/static"),
+		"Directory containing frontend static assets",
+	)
+
+	flag.Parse()
 
 	// Initialize the logger
 	logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
