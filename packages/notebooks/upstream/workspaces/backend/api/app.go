@@ -35,6 +35,46 @@ import (
 	_ "github.com/kubeflow/notebooks/workspaces/backend/openapi"
 )
 
+const (
+	Version    = "1.0.0"
+	PathPrefix = "/api/v1"
+
+	MediaTypeJson = "application/json"
+	MediaTypeYaml = "application/yaml"
+
+	NamespacePathParam    = "namespace"
+	ResourceNamePathParam = "name"
+
+	// healthcheck
+	HealthCheckPath = PathPrefix + "/healthcheck"
+
+	// user
+	UserPath = PathPrefix + "/user"
+
+	// workspaces
+	AllWorkspacesPath         = PathPrefix + "/workspaces"
+	WorkspacesByNamespacePath = AllWorkspacesPath + "/:" + NamespacePathParam
+	WorkspacesByNamePath      = AllWorkspacesPath + "/:" + NamespacePathParam + "/:" + ResourceNamePathParam
+	WorkspaceActionsPath      = WorkspacesByNamePath + "/actions"
+	PauseWorkspacePath        = WorkspaceActionsPath + "/pause"
+
+	// workspacekinds
+	AllWorkspaceKindsPath    = PathPrefix + "/workspacekinds"
+	WorkspaceKindsByNamePath = AllWorkspaceKindsPath + "/:" + ResourceNamePathParam
+
+	// namespaces
+	AllNamespacesPath = PathPrefix + "/namespaces"
+
+	// secrets
+	SecretsByNamespacePath = PathPrefix + "/secrets/:" + NamespacePathParam
+	SecretsByNamePath      = SecretsByNamespacePath + "/:" + ResourceNamePathParam
+
+	// swagger
+	SwaggerPath    = PathPrefix + "/swagger/*any"
+	SwaggerDocPath = PathPrefix + "/swagger/doc.json"
+)
+
+
 type App struct {
 	Config               *config.EnvConfig
 	logger               *slog.Logger
@@ -78,6 +118,9 @@ func (a *App) Routes() http.Handler {
 
 	// healthcheck
 	router.GET(constants.HealthCheckPath, a.GetHealthcheckHandler)
+
+	// user
+	router.GET(UserPath, a.GetUserHandler)
 
 	// namespaces
 	router.GET(constants.AllNamespacesPath, a.GetNamespacesHandler)
