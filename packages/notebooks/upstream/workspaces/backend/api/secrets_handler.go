@@ -67,6 +67,10 @@ func (a *App) GetSecretsByNamespaceHandler(w http.ResponseWriter, r *http.Reques
 		auth.NewResourcePolicy(
 			auth.ResourceVerbList,
 			&corev1.Secret{
+				TypeMeta: metav1.TypeMeta{
+					APIVersion: "v1",
+					Kind:       "Secret",
+				},
 				ObjectMeta: metav1.ObjectMeta{
 					Namespace: namespace,
 				},
@@ -122,6 +126,10 @@ func (a *App) GetSecretHandler(w http.ResponseWriter, r *http.Request, ps httpro
 		auth.NewResourcePolicy(
 			auth.ResourceVerbGet,
 			&corev1.Secret{
+				TypeMeta: metav1.TypeMeta{
+					APIVersion: "v1",
+					Kind:       "Secret",
+				},
 				ObjectMeta: metav1.ObjectMeta{
 					Namespace: namespace,
 					Name:      secretName,
@@ -224,6 +232,10 @@ func (a *App) CreateSecretHandler(w http.ResponseWriter, r *http.Request, ps htt
 		auth.NewResourcePolicy(
 			auth.ResourceVerbCreate,
 			&corev1.Secret{
+				TypeMeta: metav1.TypeMeta{
+					APIVersion: "v1",
+					Kind:       "Secret",
+				},
 				ObjectMeta: metav1.ObjectMeta{
 					Namespace: namespace,
 					Name:      secretCreate.Name,
@@ -295,6 +307,10 @@ func (a *App) UpdateSecretHandler(w http.ResponseWriter, r *http.Request, ps htt
 		auth.NewResourcePolicy(
 			auth.ResourceVerbUpdate,
 			&corev1.Secret{
+				TypeMeta: metav1.TypeMeta{
+					APIVersion: "v1",
+					Kind:       "Secret",
+				},
 				ObjectMeta: metav1.ObjectMeta{
 					Namespace: namespace,
 					Name:      secretName,
@@ -393,6 +409,10 @@ func (a *App) DeleteSecretHandler(w http.ResponseWriter, r *http.Request, ps htt
 		auth.NewResourcePolicy(
 			auth.ResourceVerbDelete,
 			&corev1.Secret{
+				TypeMeta: metav1.TypeMeta{
+					APIVersion: "v1",
+					Kind:       "Secret",
+				},
 				ObjectMeta: metav1.ObjectMeta{
 					Namespace: namespace,
 					Name:      secretName,

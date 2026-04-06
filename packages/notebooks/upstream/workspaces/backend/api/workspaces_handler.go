@@ -74,6 +74,10 @@ func (a *App) GetWorkspaceHandler(w http.ResponseWriter, r *http.Request, ps htt
 		auth.NewResourcePolicy(
 			auth.ResourceVerbGet,
 			&kubefloworgv1beta1.Workspace{
+				TypeMeta: metav1.TypeMeta{
+					APIVersion: "kubeflow.org/v1beta1",
+					Kind:       "Workspace",
+				},
 				ObjectMeta: metav1.ObjectMeta{
 					Namespace: namespace,
 					Name:      workspaceName,
@@ -156,6 +160,10 @@ func (a *App) getWorkspacesHandler(w http.ResponseWriter, r *http.Request, ps ht
 		auth.NewResourcePolicy(
 			auth.ResourceVerbList,
 			&kubefloworgv1beta1.Workspace{
+				TypeMeta: metav1.TypeMeta{
+					APIVersion: "kubeflow.org/v1beta1",
+					Kind:       "Workspace",
+				},
 				ObjectMeta: metav1.ObjectMeta{
 					Namespace: namespace,
 				},
@@ -258,6 +266,10 @@ func (a *App) CreateWorkspaceHandler(w http.ResponseWriter, r *http.Request, ps 
 		auth.NewResourcePolicy(
 			auth.ResourceVerbCreate,
 			&kubefloworgv1beta1.Workspace{
+				TypeMeta: metav1.TypeMeta{
+					APIVersion: "kubeflow.org/v1beta1",
+					Kind:       "Workspace",
+				},
 				ObjectMeta: metav1.ObjectMeta{
 					Namespace: namespace,
 					Name:      workspaceCreate.Name,
@@ -332,6 +344,10 @@ func (a *App) UpdateWorkspaceHandler(w http.ResponseWriter, r *http.Request, ps 
 		auth.NewResourcePolicy(
 			auth.ResourceVerbUpdate,
 			&kubefloworgv1beta1.Workspace{
+				TypeMeta: metav1.TypeMeta{
+					APIVersion: "kubeflow.org/v1beta1",
+					Kind:       "Workspace",
+				},
 				ObjectMeta: metav1.ObjectMeta{
 					Namespace: namespace,
 					Name:      workspaceName,
@@ -441,6 +457,10 @@ func (a *App) DeleteWorkspaceHandler(w http.ResponseWriter, r *http.Request, ps 
 		auth.NewResourcePolicy(
 			auth.ResourceVerbDelete,
 			&kubefloworgv1beta1.Workspace{
+				TypeMeta: metav1.TypeMeta{
+					APIVersion: "kubeflow.org/v1beta1",
+					Kind:       "Workspace",
+				},
 				ObjectMeta: metav1.ObjectMeta{
 					Namespace: namespace,
 					Name:      workspaceName,

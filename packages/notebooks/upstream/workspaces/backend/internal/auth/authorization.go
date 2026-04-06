@@ -18,7 +18,9 @@ package auth
 
 import (
 	"fmt"
+	"log/slog"
 	"net/http"
+	"strings"
 	"time"
 
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -73,21 +75,48 @@ func NewRequestAuthorizer(restConfig *rest.Config, httpClient *http.Client) (aut
 type ResourcePolicy struct {
 	Verb ResourceVerb
 
-	Group   string
-	Version string
-	Kind    string
+	Group    string
+	Version  string
+	Kind     string
+	Resource string
 
 	Namespace string
 	Name      string
 }
 
+// kindToResource converts a Kind name to a resource name (lowercase plural).
+// This is a simplified conversion that works for common resources.
+func kindToResource(kind string) string {
+	if kind == "" {
+		return ""
+	}
+	lower := strings.ToLower(kind)
+	// Handle common irregular plurals
+	if strings.HasSuffix(lower, "s") {
+		return lower + "es"
+	}
+	return lower + "s"
+}
+
 // NewResourcePolicy returns a new resource policy based on the provided verb and resource object.
 func NewResourcePolicy(verb ResourceVerb, object client.Object) *ResourcePolicy {
+	gvk := object.GetObjectKind().GroupVersionKind()
+	resource := kindToResource(gvk.Kind)
+	
+	slog.Debug("NewResourcePolicy",
+		"verb", verb,
+		"group", gvk.Group,
+		"version", gvk.Version,
+		"kind", gvk.Kind,
+		"resource", resource,
+	)
+	
 	policy := &ResourcePolicy{
-		Verb:    verb,
-		Group:   object.GetObjectKind().GroupVersionKind().Group,
-		Version: object.GetObjectKind().GroupVersionKind().Version,
-		Kind:    object.GetObjectKind().GroupVersionKind().Kind,
+		Verb:     verb,
+		Group:    gvk.Group,
+		Version:  gvk.Version,
+		Kind:     gvk.Kind,
+		Resource: resource,
 	}
 
 	if object.GetNamespace() != "" {
@@ -103,13 +132,21 @@ func NewResourcePolicy(verb ResourceVerb, object client.Object) *ResourcePolicy 
 
 // AttributesFor returns an authorizer.Attributes which could be used with an authorizer.Authorizer to authorize the user for the resource policy.
 func (p *ResourcePolicy) AttributesFor(u user.Info) authorizer.Attributes {
+	slog.Info("AttributesFor SAR check",
+		"user", u.GetName(),
+		"groups", u.GetGroups(),
+		"verb", p.Verb,
+		"apiGroup", p.Group,
+		"resource", p.Resource,
+		"namespace", p.Namespace,
+	)
 	return authorizer.AttributesRecord{
 		User:            u,
 		Verb:            string(p.Verb),
 		Namespace:       p.Namespace,
 		APIGroup:        p.Group,
 		APIVersion:      p.Version,
-		Resource:        p.Kind,
+		Resource:        p.Resource,
 		Name:            p.Name,
 		ResourceRequest: true,
 	}

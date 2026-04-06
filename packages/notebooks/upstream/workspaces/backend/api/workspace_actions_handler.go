@@ -103,6 +103,10 @@ func (a *App) PauseActionWorkspaceHandler(w http.ResponseWriter, r *http.Request
 		auth.NewResourcePolicy(
 			auth.ResourceVerbUpdate,
 			&kubefloworgv1beta1.Workspace{
+				TypeMeta: metav1.TypeMeta{
+					APIVersion: "kubeflow.org/v1beta1",
+					Kind:       "Workspace",
+				},
 				ObjectMeta: metav1.ObjectMeta{
 					Namespace: namespace,
 					Name:      workspaceName,
