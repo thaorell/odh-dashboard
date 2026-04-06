@@ -672,7 +672,7 @@
       - name: PORT
         value: "8843"
       - name: DISABLE_AUTH
-        value: "true"
+        value: "false"
       - name: USERID_HEADER
         value: "X-Auth-Request-User"
       - name: USERID_PREFIX
