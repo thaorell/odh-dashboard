@@ -48,7 +48,8 @@ export function useWorkspaceFormLocationData(): WorkspaceFormLocationData {
       namespace,
       workspaceName,
       workspaceKindName,
-      returnUrl: editState.returnUrl,
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+      returnUrl: editState?.returnUrl,
     };
   }
 
@@ -59,7 +60,8 @@ export function useWorkspaceFormLocationData(): WorkspaceFormLocationData {
     return {
       mode: 'create',
       namespace,
-      returnUrl: createState.returnUrl,
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+      returnUrl: createState?.returnUrl,
     };
   }
 
