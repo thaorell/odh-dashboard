@@ -10,7 +10,7 @@ import {
 import { ThemeProvider, Theme } from 'mod-arch-kubeflow';
 import { Bullseye } from '@patternfly/react-core/dist/esm/layouts/Bullseye';
 import { Spinner } from '@patternfly/react-core/dist/esm/components/Spinner';
-import { MemoryRouter, Route, Routes, Navigate } from 'react-router-dom';
+import { createMemoryRouter, Navigate, Outlet, RouterProvider } from 'react-router-dom';
 import { AppContext } from '~/app/context/AppContext';
 import { NamespaceContextProvider } from '~/app/context/NamespaceContextProvider';
 import { NotebookContextProvider } from '~/app/context/NotebookContext';
@@ -24,6 +24,25 @@ type WorkspacesProjectDetailsTabProps = {
   namespace?: string;
 };
 
+const ContextLayout: React.FC<{ contextValue: { config: unknown; user: unknown } }> = ({
+  contextValue,
+}) => (
+  <AppContext.Provider value={contextValue}>
+    <ThemeProvider theme={Theme.Patternfly}>
+      <BrowserStorageContextProvider>
+        <NotificationContextProvider>
+          <NotebookContextProvider>
+            <NamespaceContextProvider>
+              <Outlet />
+              <ToastNotifications />
+            </NamespaceContextProvider>
+          </NotebookContextProvider>
+        </NotificationContextProvider>
+      </BrowserStorageContextProvider>
+    </ThemeProvider>
+  </AppContext.Provider>
+);
+
 const WorkspacesProjectDetailsTabContent: React.FC = () => {
   const { configSettings, userSettings, loaded, loadError } = useSettings();
 
@@ -33,6 +52,32 @@ const WorkspacesProjectDetailsTabContent: React.FC = () => {
       user: userSettings,
     }),
     [configSettings, userSettings],
+  );
+
+  const router = useMemo(
+    () =>
+      createMemoryRouter(
+        [
+          {
+            element: <ContextLayout contextValue={contextValue} />,
+            children: [
+              { path: AppRoutePaths.workspaceCreate, element: <WorkspaceForm /> },
+              { path: AppRoutePaths.workspaceEdit, element: <WorkspaceForm /> },
+              { path: AppRoutePaths.workspaces, element: <WorkspacesWrapper /> },
+              {
+                path: AppRoutePaths.root,
+                element: <Navigate to={AppRoutePaths.workspaces} replace />,
+              },
+              { path: '*', element: <WorkspacesWrapper /> },
+            ],
+          },
+        ],
+        {
+          initialEntries: [`${ROUTES_PREFIX}${AppRoutePaths.workspaces}`],
+          basename: ROUTES_PREFIX,
+        },
+      ),
+    [contextValue],
   );
 
   if (loadError) {
@@ -51,36 +96,7 @@ const WorkspacesProjectDetailsTabContent: React.FC = () => {
     );
   }
 
-  return configSettings && userSettings ? (
-    <AppContext.Provider value={contextValue}>
-      <ThemeProvider theme={Theme.Patternfly}>
-        <BrowserStorageContextProvider>
-          <NotificationContextProvider>
-            <NotebookContextProvider>
-              <NamespaceContextProvider>
-                <MemoryRouter
-                  initialEntries={[`${ROUTES_PREFIX}${AppRoutePaths.workspaces}`]}
-                  basename={ROUTES_PREFIX}
-                >
-                  <Routes>
-                    <Route path={AppRoutePaths.workspaceCreate} element={<WorkspaceForm />} />
-                    <Route path={AppRoutePaths.workspaceEdit} element={<WorkspaceForm />} />
-                    <Route path={AppRoutePaths.workspaces} element={<WorkspacesWrapper />} />
-                    <Route
-                      path={AppRoutePaths.root}
-                      element={<Navigate to={AppRoutePaths.workspaces} replace />}
-                    />
-                    <Route path="*" element={<WorkspacesWrapper />} />
-                  </Routes>
-                  <ToastNotifications />
-                </MemoryRouter>
-              </NamespaceContextProvider>
-            </NotebookContextProvider>
-          </NotificationContextProvider>
-        </BrowserStorageContextProvider>
-      </ThemeProvider>
-    </AppContext.Provider>
-  ) : null;
+  return configSettings && userSettings ? <RouterProvider router={router} /> : null;
 };
 
 const WorkspacesProjectDetailsTab: React.FC<WorkspacesProjectDetailsTabProps> = ({ namespace }) => {
