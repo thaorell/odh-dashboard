@@ -15,6 +15,7 @@ import {
 import { OutlinedQuestionCircleIcon } from '@patternfly/react-icons';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useDeploymentsTab } from '#~/concepts/projects/projectDetails/useDeploymentsTab';
+import { useWorkbenchesV2Tab } from '#~/concepts/projects/projectDetails/useWorkbenchesV2Tab';
 import ApplicationsPage from '#~/pages/ApplicationsPage';
 import { ProjectDetailsContext } from '#~/pages/projects/ProjectDetailsContext';
 import GenericHorizontalBar from '#~/pages/projects/components/GenericHorizontalBar';
@@ -52,6 +53,7 @@ const ProjectDetails: React.FC = () => {
   const pipelinesEnabled = useIsAreaAvailable(SupportedArea.DS_PIPELINES).status;
   const projectRBACEnabled = useIsAreaAvailable(SupportedArea.PROJECT_RBAC_SETTINGS).status;
   const deploymentsTab = useDeploymentsTab();
+  const workbenchesV2Tab = useWorkbenchesV2Tab();
   const [searchParams, setSearchParams] = useSearchParams();
   const state = searchParams.get('section');
 
@@ -157,6 +159,7 @@ const ProjectDetails: React.FC = () => {
                   },
                 ]
               : []),
+            ...workbenchesV2Tab,
             ...(pipelinesEnabled
               ? [
                   {
@@ -204,6 +207,7 @@ const ProjectDetails: React.FC = () => {
           ],
           [
             workbenchEnabled,
+            workbenchesV2Tab,
             pipelinesEnabled,
             deploymentsTab,
             projectSharingEnabled,

@@ -8,6 +8,7 @@ export enum ProjectSectionID {
   PERMISSIONS = 'permissions',
   SETTINGS = 'settings',
   FEATURE_STORE = 'feature-store-integration',
+  WORKBENCHES_V2 = 'workbenches-v2',
 }
 
 export type ProjectSectionTitlesType = {

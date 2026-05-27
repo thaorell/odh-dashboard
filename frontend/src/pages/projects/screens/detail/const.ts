@@ -10,6 +10,7 @@ export const ProjectSectionTitles: ProjectSectionTitlesType = {
   [ProjectSectionID.PERMISSIONS]: 'Permissions',
   [ProjectSectionID.SETTINGS]: 'Settings',
   [ProjectSectionID.FEATURE_STORE]: 'Feature Store',
+  [ProjectSectionID.WORKBENCHES_V2]: 'Workbenches v2',
 };
 
 /**
