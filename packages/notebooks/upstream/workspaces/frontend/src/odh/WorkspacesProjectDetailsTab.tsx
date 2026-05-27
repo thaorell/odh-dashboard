@@ -10,11 +10,14 @@ import {
 import { ThemeProvider, Theme } from 'mod-arch-kubeflow';
 import { Bullseye } from '@patternfly/react-core/dist/esm/layouts/Bullseye';
 import { Spinner } from '@patternfly/react-core/dist/esm/components/Spinner';
+import { MemoryRouter, Route, Routes, Navigate } from 'react-router-dom';
 import { AppContext } from '~/app/context/AppContext';
 import { NamespaceContextProvider } from '~/app/context/NamespaceContextProvider';
 import { NotebookContextProvider } from '~/app/context/NotebookContext';
 import { WorkspacesWrapper } from '~/app/pages/Workspaces/WorkspacesWrapper';
-import { BFF_API_VERSION, URL_PREFIX } from '~/shared/utilities/const';
+import { WorkspaceForm } from '~/app/pages/Workspaces/Form/WorkspaceForm';
+import { AppRoutePaths } from '~/app/routes';
+import { BFF_API_VERSION, URL_PREFIX, ROUTES_PREFIX } from '~/shared/utilities/const';
 import ToastNotifications from '~/app/standalone/ToastNotifications';
 
 type WorkspacesProjectDetailsTabProps = {
@@ -55,8 +58,22 @@ const WorkspacesProjectDetailsTabContent: React.FC = () => {
           <NotificationContextProvider>
             <NotebookContextProvider>
               <NamespaceContextProvider>
-                <WorkspacesWrapper />
-                <ToastNotifications />
+                <MemoryRouter
+                  initialEntries={[`${ROUTES_PREFIX}${AppRoutePaths.workspaces}`]}
+                  basename={ROUTES_PREFIX}
+                >
+                  <Routes>
+                    <Route path={AppRoutePaths.workspaceCreate} element={<WorkspaceForm />} />
+                    <Route path={AppRoutePaths.workspaceEdit} element={<WorkspaceForm />} />
+                    <Route path={AppRoutePaths.workspaces} element={<WorkspacesWrapper />} />
+                    <Route
+                      path={AppRoutePaths.root}
+                      element={<Navigate to={AppRoutePaths.workspaces} replace />}
+                    />
+                    <Route path="*" element={<WorkspacesWrapper />} />
+                  </Routes>
+                  <ToastNotifications />
+                </MemoryRouter>
               </NamespaceContextProvider>
             </NotebookContextProvider>
           </NotificationContextProvider>
