@@ -4,8 +4,8 @@ import { PageSection } from '@patternfly/react-core/dist/esm/components/Page';
 import { Stack, StackItem } from '@patternfly/react-core/dist/esm/layouts/Stack';
 import { Flex, FlexItem } from '@patternfly/react-core';
 import WorkspaceTable from '~/app/components/WorkspaceTable';
-import { useNamespaceContext } from '~/app/context/NamespaceContextProvider';
 import { useWorkspacesByNamespace } from '~/app/hooks/useWorkspaces';
+import { useNamespaceSelectorWrapper } from '~/app/hooks/useNamespaceSelectorWrapper';
 import { LoadingSpinner } from '~/app/components/LoadingSpinner';
 import { LoadError } from '~/app/components/LoadError';
 import { useWorkspaceRowActions } from '~/app/hooks/useWorkspaceRowActions';
@@ -13,7 +13,7 @@ import { WorkspacesWorkspaceState } from '~/generated/data-contracts';
 import NamespaceSelector from '~/app/components/NamespaceSelector';
 
 export const Workspaces: React.FunctionComponent = () => {
-  const { namespacesLoaded, selectedNamespace } = useNamespaceContext();
+  const { namespacesLoaded, selectedNamespace } = useNamespaceSelectorWrapper();
 
   const [workspaces, workspacesLoaded, workspacesLoadError, refreshWorkspaces] =
     useWorkspacesByNamespace(selectedNamespace);

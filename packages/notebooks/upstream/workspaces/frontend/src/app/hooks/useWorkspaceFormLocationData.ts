@@ -1,5 +1,4 @@
-/* eslint-disable @cspell/spellchecker */
-import { useNamespaceContext } from '~/app/context/NamespaceContextProvider';
+import { useNamespaceSelectorWrapper } from '~/app/hooks/useNamespaceSelectorWrapper';
 import { useCurrentRouteKey } from '~/app/hooks/useCurrentRouteKey';
 import { useTypedLocation } from '~/app/routerHelper';
 import { AppRouteKey, RouteStateMap } from '~/app/routes';
@@ -28,7 +27,7 @@ function getRouteStateIfMatch<K extends AppRouteKey>(
 }
 
 export function useWorkspaceFormLocationData(): WorkspaceFormLocationData {
-  const { selectedNamespace } = useNamespaceContext();
+  const { selectedNamespace } = useNamespaceSelectorWrapper();
   const location = useTypedLocation<'workspaceEdit' | 'workspaceCreate'>();
   const routeKey = useCurrentRouteKey();
   const rawState = location.state as WorkspaceFormLocationState | undefined;
