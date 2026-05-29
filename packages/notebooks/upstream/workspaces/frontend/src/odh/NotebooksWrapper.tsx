@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
   BrowserStorageContextProvider,
   NotificationContextProvider,
@@ -8,9 +8,9 @@ import {
   useSettings,
 } from 'mod-arch-core';
 import { ThemeProvider, Theme } from 'mod-arch-kubeflow';
-import { Bullseye, Spinner } from '@patternfly/react-core';
+import { Bullseye } from '@patternfly/react-core/dist/esm/layouts/Bullseye';
+import { Spinner } from '@patternfly/react-core/dist/esm/components/Spinner';
 import AppRoutes from '~/app/AppRoutes';
-import { NamespaceContextProvider } from '~/app/context/NamespaceContextProvider';
 import { NotebookContextProvider } from '~/app/context/NotebookContext';
 import { BFF_API_VERSION, MANDATORY_NAMESPACE, URL_PREFIX } from '~/shared/utilities/const';
 import { AppContext } from '~/app/context/AppContext';
@@ -18,6 +18,11 @@ import ToastNotifications from '~/app/standalone/ToastNotifications';
 
 const NotebooksWrapperContent: React.FC = () => {
   const { configSettings, userSettings, loaded, loadError } = useSettings();
+
+  const contextValue = useMemo(
+    () => ({ config: configSettings, user: userSettings }),
+    [configSettings, userSettings],
+  );
 
   if (loadError) {
     return (
@@ -36,20 +41,13 @@ const NotebooksWrapperContent: React.FC = () => {
   }
 
   return configSettings && userSettings ? (
-    <AppContext.Provider
-      value={{
-        config: configSettings,
-        user: userSettings,
-      }}
-    >
+    <AppContext.Provider value={contextValue}>
       <ThemeProvider theme={Theme.Patternfly}>
         <BrowserStorageContextProvider>
           <NotificationContextProvider>
             <NotebookContextProvider>
-              <NamespaceContextProvider>
-                <AppRoutes />
-                <ToastNotifications />
-              </NamespaceContextProvider>
+              <AppRoutes />
+              <ToastNotifications />
             </NotebookContextProvider>
           </NotificationContextProvider>
         </BrowserStorageContextProvider>

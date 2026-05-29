@@ -11,7 +11,6 @@ import { ThemeProvider, Theme } from 'mod-arch-kubeflow';
 import { Bullseye } from '@patternfly/react-core/dist/esm/layouts/Bullseye';
 import { Spinner } from '@patternfly/react-core/dist/esm/components/Spinner';
 import { AppContext } from '~/app/context/AppContext';
-import { NamespaceContextProvider } from '~/app/context/NamespaceContextProvider';
 import { NotebookContextProvider } from '~/app/context/NotebookContext';
 import { WorkspacesWrapper } from '~/app/pages/Workspaces/WorkspacesWrapper';
 import { BFF_API_VERSION, URL_PREFIX } from '~/shared/utilities/const';
@@ -54,10 +53,8 @@ const WorkspacesProjectDetailsTabContent: React.FC = () => {
         <BrowserStorageContextProvider>
           <NotificationContextProvider>
             <NotebookContextProvider>
-              <NamespaceContextProvider>
-                <WorkspacesWrapper />
-                <ToastNotifications />
-              </NamespaceContextProvider>
+              <WorkspacesWrapper />
+              <ToastNotifications />
             </NotebookContextProvider>
           </NotificationContextProvider>
         </BrowserStorageContextProvider>
