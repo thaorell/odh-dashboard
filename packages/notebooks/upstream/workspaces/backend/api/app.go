@@ -80,7 +80,7 @@ func (a *App) Routes() http.Handler {
 	router.GET(constants.HealthCheckPath, a.GetHealthcheckHandler)
 
 	// user
-	router.GET(UserPath, a.GetUserHandler)
+	router.GET(constants.UserPath, a.GetUserHandler)
 
 	// namespaces
 	router.GET(constants.AllNamespacesPath, a.GetNamespacesHandler)
@@ -128,7 +128,7 @@ func (a *App) Routes() http.Handler {
 	mux := http.NewServeMux()
 
 	// API routes - handle /api/v1/* paths
-	mux.Handle(PathPrefix+"/", a.recoverPanic(a.enableCORS(router)))
+	mux.Handle(constants.PathPrefix+"/", a.recoverPanic(a.enableCORS(router)))
 
 	// Static file server for frontend assets (Module Federation support)
 	if a.Config.StaticAssetsDir != "" {
