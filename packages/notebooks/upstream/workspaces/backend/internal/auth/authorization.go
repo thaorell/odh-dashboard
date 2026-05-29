@@ -113,9 +113,9 @@ func (p *ResourcePolicy) AttributesFor(u user.Info) authorizer.Attributes {
 		"user", u.GetName(),
 		"groups", u.GetGroups(),
 		"verb", p.Verb,
-		"apiGroup", p.Group,
-		"resource", p.Resource,
-		"namespace", p.Namespace,
+		"apiGroup", p.GVR.Group,
+		"resource", p.GVR.Resource,
+		"namespace", p.ResourceMeta.Namespace,
 	)
 	return authorizer.AttributesRecord{
 		User:            u,
