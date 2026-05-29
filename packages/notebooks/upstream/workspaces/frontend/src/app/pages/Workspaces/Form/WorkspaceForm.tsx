@@ -406,6 +406,7 @@ const WorkspaceForm: React.FC = () => {
                     {currentStep === WorkspaceFormSteps.KindSelection && (
                       <WorkspaceFormKindSelection
                         mode={mode}
+                        namespace={namespace}
                         selectedKind={data.kind}
                         onSelect={handleKindSelect}
                       />
