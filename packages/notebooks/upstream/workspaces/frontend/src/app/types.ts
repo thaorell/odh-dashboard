@@ -1,10 +1,10 @@
 import {
-  WorkspacekindsImageConfigValue,
+  OptionsImageConfigValue,
+  OptionsPodConfigValue,
   WorkspacekindsImageRef,
-  WorkspacekindsPodConfigValue,
   WorkspacekindsPodMetadata,
   WorkspacekindsPodVolumeMounts,
-  WorkspacekindsWorkspaceKind,
+  WorkspacekindsWorkspaceKindListItem,
   WorkspacesPodSecretMount,
   WorkspacesPodTemplateOptionsMutate,
   WorkspacesPodVolumeMount,
@@ -40,7 +40,7 @@ export interface WorkspaceFormProperties {
 
 export interface WorkspaceFormData {
   revision: string;
-  kind: WorkspacekindsWorkspaceKind | undefined;
+  kind: WorkspacekindsWorkspaceKindListItem | undefined;
   imageConfig: WorkspacesPodTemplateOptionsMutate['imageConfig'] | undefined;
   podConfig: WorkspacesPodTemplateOptionsMutate['podConfig'] | undefined;
   properties: WorkspaceFormProperties;
@@ -48,8 +48,8 @@ export interface WorkspaceFormData {
 
 export interface WorkspaceCountPerOption {
   count: number;
-  countByImage: Record<WorkspacekindsImageConfigValue['id'], number>;
-  countByPodConfig: Record<WorkspacekindsPodConfigValue['id'], number>;
+  countByImage: Record<OptionsImageConfigValue['id'], number>;
+  countByPodConfig: Record<OptionsPodConfigValue['id'], number>;
   countByNamespace: Record<WorkspacesWorkspaceListItem['namespace'], number>;
 }
 
@@ -63,7 +63,7 @@ export interface WorkspaceKindProperties {
   logo: WorkspacekindsImageRef;
 }
 
-export interface WorkspaceKindImageConfigValue extends WorkspacekindsImageConfigValue {
+export interface WorkspaceKindImageConfigValue extends OptionsImageConfigValue {
   imagePullPolicy?: ImagePullPolicy.IfNotPresent | ImagePullPolicy.Always | ImagePullPolicy.Never;
   ports?: WorkspaceKindImagePort[];
   image?: string;
@@ -82,7 +82,7 @@ export interface WorkspaceKindImagePort {
   protocol: 'HTTP'; // ONLY HTTP is supported at the moment, per https://github.com/thesuperzapper/kubeflow-notebooks-v2-design/blob/main/crds/workspace-kind.yaml#L275
 }
 
-export interface WorkspaceKindPodConfigValue extends WorkspacekindsPodConfigValue {
+export interface WorkspaceKindPodConfigValue extends OptionsPodConfigValue {
   resources?: {
     requests: {
       [key: string]: string;
@@ -96,12 +96,12 @@ export interface WorkspaceKindPodConfigValue extends WorkspacekindsPodConfigValu
 
 export interface WorkspaceKindImageConfigData {
   default: string;
-  values: WorkspaceKindImageConfigValue[];
+  values?: WorkspaceKindImageConfigValue[];
 }
 
 export interface WorkspaceKindPodConfigData {
   default: string;
-  values: WorkspaceKindPodConfigValue[];
+  values?: WorkspaceKindPodConfigValue[];
 }
 export interface WorkspaceKindPodCulling {
   enabled: boolean;
