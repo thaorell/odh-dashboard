@@ -2,7 +2,7 @@ import React from 'react';
 import { Content, ContentVariants } from '@patternfly/react-core/dist/esm/components/Content';
 import { PageSection } from '@patternfly/react-core/dist/esm/components/Page';
 import { Stack, StackItem } from '@patternfly/react-core/dist/esm/layouts/Stack';
-import { Flex, FlexItem } from '@patternfly/react-core';
+import { Flex, FlexItem } from '@patternfly/react-core/dist/esm/layouts/Flex';
 import WorkspaceTable from '~/app/components/WorkspaceTable';
 import { useWorkspacesByNamespace } from '~/app/hooks/useWorkspaces';
 import { useNamespaceSelectorWrapper } from '~/app/hooks/useNamespaceSelectorWrapper';
@@ -15,7 +15,7 @@ import NamespaceSelector from '~/app/components/NamespaceSelector';
 export const Workspaces: React.FunctionComponent = () => {
   const { namespacesLoaded, selectedNamespace } = useNamespaceSelectorWrapper();
 
-  const [workspaces, workspacesLoaded, workspacesLoadError, refreshWorkspaces] =
+  const [workspaces, , workspacesLoadError, refreshWorkspaces] =
     useWorkspacesByNamespace(selectedNamespace);
 
   const tableRowActions = useWorkspaceRowActions([
@@ -52,14 +52,20 @@ export const Workspaces: React.FunctionComponent = () => {
     <PageSection isFilled>
       <Stack hasGutter>
         <StackItem>
-          <Flex justifyContent={{ default: 'justifyContentSpaceBetween' }} alignItems={{ default: 'alignItemsCenter' }}>
+          <Flex
+            justifyContent={{ default: 'justifyContentSpaceBetween' }}
+            alignItems={{ default: 'alignItemsCenter' }}
+          >
             <FlexItem>
               <Content component={ContentVariants.h1} data-testid="app-page-title">
                 Workspaces
               </Content>
             </FlexItem>
             <FlexItem>
-              <Flex alignItems={{ default: 'alignItemsCenter' }} spaceItems={{ default: 'spaceItemsSm' }}>
+              <Flex
+                alignItems={{ default: 'alignItemsCenter' }}
+                spaceItems={{ default: 'spaceItemsSm' }}
+              >
                 <FlexItem>
                   <Content component={ContentVariants.small}>Project</Content>
                 </FlexItem>
