@@ -219,6 +219,16 @@ const WorkspaceForm: React.FC = () => {
       if (mode === 'create') {
         resetData();
         setData('kind', kind);
+
+        const defaultImageId = kind.podTemplate.options.imageConfig.default;
+        const defaultPodConfigId = kind.podTemplate.options.podConfig.default;
+
+        if (defaultImageId) {
+          setData('imageConfig', defaultImageId);
+        }
+        if (defaultPodConfigId) {
+          setData('podConfig', defaultPodConfigId);
+        }
       }
       setDrawerExpanded(true);
     },
@@ -230,6 +240,8 @@ const WorkspaceForm: React.FC = () => {
       if (image) {
         setData('imageConfig', image.id);
         setDrawerExpanded(true);
+      } else {
+        setData('imageConfig', undefined);
       }
     },
     [setData],
@@ -240,6 +252,8 @@ const WorkspaceForm: React.FC = () => {
       if (podConfig) {
         setData('podConfig', podConfig.id);
         setDrawerExpanded(true);
+      } else {
+        setData('podConfig', undefined);
       }
     },
     [setData],
@@ -384,6 +398,7 @@ const WorkspaceForm: React.FC = () => {
                         selectedImage={selectedImage}
                         onSelect={handleImageSelect}
                         images={data.kind?.podTemplate.options.imageConfig.values ?? []}
+                        defaultImageId={data.kind?.podTemplate.options.imageConfig.default}
                       />
                     )}
                     {currentStep === WorkspaceFormSteps.PodConfigSelection && (
@@ -391,6 +406,7 @@ const WorkspaceForm: React.FC = () => {
                         selectedPodConfig={selectedPodConfig}
                         onSelect={handlePodConfigSelect}
                         podConfigs={data.kind?.podTemplate.options.podConfig.values ?? []}
+                        defaultPodConfigId={data.kind?.podTemplate.options.podConfig.default}
                       />
                     )}
                     {currentStep === WorkspaceFormSteps.Properties && (
