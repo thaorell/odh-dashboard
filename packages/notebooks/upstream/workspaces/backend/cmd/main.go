@@ -30,6 +30,7 @@ import (
 	"github.com/kubeflow/notebooks/workspaces/backend/internal/config"
 	"github.com/kubeflow/notebooks/workspaces/backend/internal/helper"
 	"github.com/kubeflow/notebooks/workspaces/backend/internal/server"
+	"github.com/kubeflow/notebooks/workspaces/backend/openapi"
 )
 
 //	@title			Kubeflow Notebooks API
@@ -98,8 +99,39 @@ func main() {
 		getEnvAsStr("STATIC_ASSETS_DIR", "/static"),
 		"Directory containing frontend static assets",
 	)
+	flag.BoolVar(
+		&cfg.SwaggerEnabled,
+		"swagger-enabled",
+		getEnvAsBool("SWAGGER_ENABLED", false),
+		"Enable the Swagger UI",
+	)
+	flag.StringVar(
+		&cfg.SwaggerHost,
+		"swagger-host",
+		getEnvAsStr("SWAGGER_HOST", "localhost:4000"),
+		"Host used in the Swagger UI (e.g. localhost:4000)",
+	)
+	flag.StringVar(
+		&cfg.SwaggerBasePath,
+		"swagger-base-path",
+		getEnvAsStr("SWAGGER_BASE_PATH", "/api/v1"),
+		"Base path used in the Swagger UI",
+	)
+	flag.StringVar(
+		&cfg.SwaggerScheme,
+		"swagger-scheme",
+		getEnvAsStr("SWAGGER_SCHEME", "http"),
+		"Scheme used in the Swagger UI (http or https)",
+	)
 
 	flag.Parse()
+
+	// Override Swagger metadata with runtime config
+	if cfg.SwaggerEnabled {
+		openapi.SwaggerInfo.Host = cfg.SwaggerHost
+		openapi.SwaggerInfo.BasePath = cfg.SwaggerBasePath
+		openapi.SwaggerInfo.Schemes = []string{cfg.SwaggerScheme}
+	}
 
 	// Initialize the logger
 	logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
