@@ -22,9 +22,7 @@ import (
 	"net/http"
 
 	"github.com/julienschmidt/httprouter"
-	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 
 	"github.com/kubeflow/notebooks/workspaces/backend/internal/auth"
@@ -64,18 +62,7 @@ func (a *App) GetSecretsByNamespaceHandler(w http.ResponseWriter, r *http.Reques
 
 	// =========================== AUTH ===========================
 	authPolicies := []*auth.ResourcePolicy{
-		auth.NewResourcePolicy(
-			auth.ResourceVerbList,
-			&corev1.Secret{
-				TypeMeta: metav1.TypeMeta{
-					APIVersion: "v1",
-					Kind:       "Secret",
-				},
-				ObjectMeta: metav1.ObjectMeta{
-					Namespace: namespace,
-				},
-			},
-		),
+		auth.NewResourcePolicy(auth.VerbList, auth.Secrets, auth.ResourcePolicyResourceMeta{Namespace: namespace}),
 	}
 	if success := a.requireAuth(w, r, authPolicies); !success {
 		return
@@ -123,19 +110,7 @@ func (a *App) GetSecretHandler(w http.ResponseWriter, r *http.Request, ps httpro
 
 	// =========================== AUTH ===========================
 	authPolicies := []*auth.ResourcePolicy{
-		auth.NewResourcePolicy(
-			auth.ResourceVerbGet,
-			&corev1.Secret{
-				TypeMeta: metav1.TypeMeta{
-					APIVersion: "v1",
-					Kind:       "Secret",
-				},
-				ObjectMeta: metav1.ObjectMeta{
-					Namespace: namespace,
-					Name:      secretName,
-				},
-			},
-		),
+		auth.NewResourcePolicy(auth.VerbGet, auth.Secrets, auth.ResourcePolicyResourceMeta{Namespace: namespace, Name: secretName}),
 	}
 	if success := a.requireAuth(w, r, authPolicies); !success {
 		return
@@ -229,19 +204,7 @@ func (a *App) CreateSecretHandler(w http.ResponseWriter, r *http.Request, ps htt
 
 	// =========================== AUTH ===========================
 	authPolicies := []*auth.ResourcePolicy{
-		auth.NewResourcePolicy(
-			auth.ResourceVerbCreate,
-			&corev1.Secret{
-				TypeMeta: metav1.TypeMeta{
-					APIVersion: "v1",
-					Kind:       "Secret",
-				},
-				ObjectMeta: metav1.ObjectMeta{
-					Namespace: namespace,
-					Name:      secretCreate.Name,
-				},
-			},
-		),
+		auth.NewResourcePolicy(auth.VerbCreate, auth.Secrets, auth.ResourcePolicyResourceMeta{Namespace: namespace, Name: secretCreate.Name}),
 	}
 	if success := a.requireAuth(w, r, authPolicies); !success {
 		return
@@ -304,19 +267,7 @@ func (a *App) UpdateSecretHandler(w http.ResponseWriter, r *http.Request, ps htt
 
 	// =========================== AUTH ===========================
 	authPolicies := []*auth.ResourcePolicy{
-		auth.NewResourcePolicy(
-			auth.ResourceVerbUpdate,
-			&corev1.Secret{
-				TypeMeta: metav1.TypeMeta{
-					APIVersion: "v1",
-					Kind:       "Secret",
-				},
-				ObjectMeta: metav1.ObjectMeta{
-					Namespace: namespace,
-					Name:      secretName,
-				},
-			},
-		),
+		auth.NewResourcePolicy(auth.VerbUpdate, auth.Secrets, auth.ResourcePolicyResourceMeta{Namespace: namespace, Name: secretName}),
 	}
 	if success := a.requireAuth(w, r, authPolicies); !success {
 		return
@@ -406,19 +357,7 @@ func (a *App) DeleteSecretHandler(w http.ResponseWriter, r *http.Request, ps htt
 
 	// =========================== AUTH ===========================
 	authPolicies := []*auth.ResourcePolicy{
-		auth.NewResourcePolicy(
-			auth.ResourceVerbDelete,
-			&corev1.Secret{
-				TypeMeta: metav1.TypeMeta{
-					APIVersion: "v1",
-					Kind:       "Secret",
-				},
-				ObjectMeta: metav1.ObjectMeta{
-					Namespace: namespace,
-					Name:      secretName,
-				},
-			},
-		),
+		auth.NewResourcePolicy(auth.VerbDelete, auth.Secrets, auth.ResourcePolicyResourceMeta{Namespace: namespace, Name: secretName}),
 	}
 	if success := a.requireAuth(w, r, authPolicies); !success {
 		return
