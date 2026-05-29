@@ -12,10 +12,11 @@ import {
   buildMockWorkspaceUpdate,
 } from '~/shared/mock/mockBuilder';
 import { navBar } from '~/__tests__/cypress/cypress/pages/components/navBar';
+import { interceptListValues } from '~/__tests__/cypress/cypress/utils/testBuilders';
 import {
   V1Beta1WorkspaceState,
-  type WorkspacekindsImageConfigValue,
-  type WorkspacekindsPodConfigValue,
+  type OptionsImageConfigValue,
+  type OptionsPodConfigValue,
 } from '~/generated/data-contracts';
 
 const STEP_NAMES = {
@@ -30,7 +31,7 @@ const buildMockImageConfigValue = (
   id: string,
   displayName: string,
   description: string,
-): WorkspacekindsImageConfigValue => ({
+): OptionsImageConfigValue => ({
   id,
   displayName,
   description,
@@ -42,7 +43,7 @@ const buildMockPodConfigValue = (
   id: string,
   displayName: string,
   description: string,
-): WorkspacekindsPodConfigValue => ({
+): OptionsPodConfigValue => ({
   id,
   displayName,
   description,
@@ -105,6 +106,7 @@ describe('Summary step', () => {
       { path: { apiVersion: NOTEBOOKS_API_VERSION } },
       mockModArchResponse([mockWorkspaceKind]),
     ).as('getWorkspaceKinds');
+    interceptListValues(mockWorkspaceKind);
 
     cy.interceptApi(
       'GET /api/:apiVersion/persistentvolumeclaims/:namespace',
