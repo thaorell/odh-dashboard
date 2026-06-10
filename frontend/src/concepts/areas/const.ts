@@ -234,6 +234,7 @@ export const SupportedAreasStateMap: SupportedAreasState = {
   [SupportedArea.MLFLOW_PIPELINES]: {
     featureFlags: ['mlflowPipelines'],
     requiredComponents: [DataScienceStackComponent.DS_PIPELINES, DataScienceStackComponent.MLFLOW],
+  },
   [SupportedArea.NOTEBOOKS_V2]: {
     featureFlags: ['notebooksV2'],
   },

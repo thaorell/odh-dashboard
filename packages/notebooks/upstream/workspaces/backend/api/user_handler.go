@@ -32,22 +32,23 @@ type UserResponse struct {
 type UserEnvelope = Envelope[*UserResponse]
 
 // GetUserHandler returns the current user settings
-// @Summary      Get user settings
-// @Description  Returns the current user's settings including user ID and admin status
-// @Tags         user
-// @Produce      json
-// @Success      200  {object}  UserEnvelope
-// @Failure      500  {object}  ErrorEnvelope
-// @Router       /user [get]
+//
+//	@Summary		Get user settings
+//	@Description	Returns the current user's settings including user ID and admin status
+//	@Tags			user
+//	@Produce		json
+//	@Success		200	{object}	UserEnvelope
+//	@Failure		500	{object}	ErrorEnvelope
+//	@Router			/user [get]
 func (a *App) GetUserHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	// Get user ID from the configured header (set by authentication proxy)
 	userId := r.Header.Get(a.Config.UserIdHeader)
-	
+
 	// Remove prefix if configured (e.g., "system:serviceaccount:" prefix)
 	if a.Config.UserIdPrefix != "" && len(userId) > len(a.Config.UserIdPrefix) {
 		userId = userId[len(a.Config.UserIdPrefix):]
 	}
-	
+
 	// Fallback headers for different deployment scenarios
 	if userId == "" {
 		userId = r.Header.Get("X-Auth-Request-User")

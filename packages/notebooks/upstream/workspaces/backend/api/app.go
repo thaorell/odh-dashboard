@@ -74,7 +74,6 @@ const (
 	SwaggerDocPath = PathPrefix + "/swagger/doc.json"
 )
 
-
 type App struct {
 	Config               *config.EnvConfig
 	logger               *slog.Logger
