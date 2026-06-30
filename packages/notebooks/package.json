@@ -36,7 +36,7 @@
     },
     "service": {
       "name": "odh-dashboard",
-      "port": 8343
+      "port": 8943
     }
   },
   "devDependencies": {

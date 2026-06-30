@@ -4,53 +4,62 @@ import type {
   RouteExtension,
 } from '@odh-dashboard/plugin-core/extension-points';
 
-const reliantAreas = ['workbenches'];
-const PLUGIN_NOTEBOOKS = 'notebooks-plugin';
+// This must match SupportedArea.NOTEBOOKS_V2 in frontend/src/concepts/areas/types.ts
+const NOTEBOOKS_V2 = 'notebooks-v2';
 
 const extensions: (NavExtension | RouteExtension | AreaExtension)[] = [
   {
     type: 'app.area',
     properties: {
-      id: PLUGIN_NOTEBOOKS,
-      reliantAreas,
-      devFlags: ['Notebooks Plugin'],
+      id: NOTEBOOKS_V2,
+      featureFlags: ['notebooksV2'],
     },
   },
   {
     type: 'app.navigation/href',
     flags: {
-      required: [PLUGIN_NOTEBOOKS],
+      required: [NOTEBOOKS_V2],
     },
     properties: {
       id: 'notebooks-kf-workspaces',
       title: 'Workspaces',
-      href: '/notebooks/workspaces',
+      href: '/workspaces',
       section: 'ai-hub',
-      path: '/notebooks/workspaces/*',
+      path: '/workspaces/*',
       group: '1_aihub',
     },
   },
   {
     type: 'app.navigation/href',
     flags: {
-      required: [PLUGIN_NOTEBOOKS],
+      required: [NOTEBOOKS_V2],
     },
     properties: {
       id: 'notebooks-kf-workspacekinds',
       title: 'Workspace Kinds',
-      href: '/notebooks/workspacekinds',
+      href: '/workspacekinds',
       section: 'ai-hub',
-      path: '/notebooks/workspacekinds/*',
+      path: '/workspacekinds/*',
       group: '1_aihub',
     },
   },
   {
     type: 'app.route',
     flags: {
-      required: [PLUGIN_NOTEBOOKS],
+      required: [NOTEBOOKS_V2],
     },
     properties: {
-      path: '/notebooks/*',
+      path: '/workspaces/*',
+      component: () => import('./NotebooksWrapper'),
+    },
+  },
+  {
+    type: 'app.route',
+    flags: {
+      required: [NOTEBOOKS_V2],
+    },
+    properties: {
+      path: '/workspacekinds/*',
       component: () => import('./NotebooksWrapper'),
     },
   },
