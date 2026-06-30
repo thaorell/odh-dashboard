@@ -13,11 +13,7 @@ export const techPreviewFlags = {
   modelAsService: true,
   maasAuthPolicies: true,
   aiAssetCustomEndpoints: false,
-<<<<<<< HEAD
-=======
-  mlflow: false,
   notebooksV2: false,
->>>>>>> 9f2f0c8ac (include new feature-flag notebookV2 in config)
   mcpCatalog: false,
   toolCalling: false,
   projectRBAC: true,
