@@ -13,7 +13,7 @@
     "start:dev:wait": "wait-on -i 1000 http://localhost:9105"
   },
   "subtree": {
-    "repo": "https://github.com/cthao/kubeflow-notebooks.git",
+    "repo": "https://github.com/thaorell/kubeflow-notebooks.git",
     "branch": "odh/module-federation",
     "src": "",
     "target": "upstream",
