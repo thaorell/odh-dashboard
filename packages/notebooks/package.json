@@ -8,13 +8,13 @@
     "type-check": "tsc --noEmit",
     "update-subtree": "package-subtree --package=@odh-dashboard/notebooks",
     "install:module": "npm install --prefix upstream/workspaces/frontend",
-    "start:dev": "cd upstream/workspaces/frontend && PORT=9105 DEPLOYMENT_MODE=federated npm run start:dev",
-    "start:dev:ext": "cd upstream/workspaces/frontend && DEPLOYMENT_MODE=federated PORT=9105 npm run start:dev",
-    "start:dev:wait": "wait-on -i 1000 http://localhost:9105"
+    "start:dev": "cd upstream/workspaces/frontend && PORT=9105 DEPLOYMENT_MODE=federated ROUTES_PREFIX= npm run start:dev",
+    "start:dev:ext": "cd upstream/workspaces/frontend && DEPLOYMENT_MODE=federated PORT=9105 ROUTES_PREFIX= npm run start:dev",
+    "start:dev:wait": "npx wait-on -i 1000 http://localhost:9105"
   },
   "subtree": {
-    "repo": "https://github.com/thaorell/kubeflow-notebooks.git",
-    "branch": "odh/module-federation",
+    "repo": "https://github.com/opendatahub-io/workbenches.git",
+    "branch": "main",
     "src": "",
     "target": "upstream",
     "commit": "343aa36def585513901d9deb25c036244fce8fff"
@@ -36,7 +36,7 @@
     },
     "service": {
       "name": "odh-dashboard",
-      "port": 8343
+      "port": 8843
     }
   },
   "devDependencies": {
