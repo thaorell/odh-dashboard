@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import {
   BrowserStorageContextProvider,
   NotificationContextProvider,
@@ -8,8 +8,7 @@ import {
   useSettings,
 } from 'mod-arch-core';
 import { ThemeProvider, Theme } from 'mod-arch-kubeflow';
-import { Bullseye } from '@patternfly/react-core/dist/esm/layouts/Bullseye';
-import { Spinner } from '@patternfly/react-core/dist/esm/components/Spinner';
+import { Bullseye, Spinner } from '@patternfly/react-core';
 import AppRoutes from '~/app/AppRoutes';
 import { NotebookContextProvider } from '~/app/context/NotebookContext';
 import { BFF_API_VERSION, MANDATORY_NAMESPACE, URL_PREFIX } from '~/shared/utilities/const';
@@ -18,11 +17,6 @@ import ToastNotifications from '~/app/standalone/ToastNotifications';
 
 const NotebooksWrapperContent: React.FC = () => {
   const { configSettings, userSettings, loaded, loadError } = useSettings();
-
-  const contextValue = useMemo(
-    () => ({ config: configSettings, user: userSettings }),
-    [configSettings, userSettings],
-  );
 
   if (loadError) {
     return (
@@ -41,7 +35,12 @@ const NotebooksWrapperContent: React.FC = () => {
   }
 
   return configSettings && userSettings ? (
-    <AppContext.Provider value={contextValue}>
+    <AppContext.Provider
+      value={{
+        config: configSettings,
+        user: userSettings,
+      }}
+    >
       <ThemeProvider theme={Theme.Patternfly}>
         <BrowserStorageContextProvider>
           <NotificationContextProvider>

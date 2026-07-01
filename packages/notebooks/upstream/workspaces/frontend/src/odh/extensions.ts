@@ -1,13 +1,15 @@
+/* eslint-disable @cspell/spellchecker */
 import type {
   AreaExtension,
   NavExtension,
+  ProjectDetailsTab,
   RouteExtension,
 } from '@odh-dashboard/plugin-core/extension-points';
 
 // This must match SupportedArea.NOTEBOOKS_V2 in frontend/src/concepts/areas/types.ts
 const NOTEBOOKS_V2 = 'notebooks-v2';
 
-const extensions: (NavExtension | RouteExtension | AreaExtension)[] = [
+const extensions: (NavExtension | RouteExtension | AreaExtension | ProjectDetailsTab)[] = [
   {
     type: 'app.area',
     properties: {
@@ -21,26 +23,11 @@ const extensions: (NavExtension | RouteExtension | AreaExtension)[] = [
       required: [NOTEBOOKS_V2],
     },
     properties: {
-      id: 'notebooks-kf-workspaces',
-      title: 'Workspaces',
-      href: '/workspaces',
-      section: 'ai-hub',
-      path: '/workspaces/*',
-      group: '1_aihub',
-    },
-  },
-  {
-    type: 'app.navigation/href',
-    flags: {
-      required: [NOTEBOOKS_V2],
-    },
-    properties: {
       id: 'notebooks-kf-workspacekinds',
-      title: 'Workspace Kinds',
-      href: '/workspacekinds',
-      section: 'ai-hub',
-      path: '/workspacekinds/*',
-      group: '1_aihub',
+      title: 'Workbench Templates',
+      href: '/notebooks/workspacekinds',
+      section: 'settings-environment-setup',
+      path: '/notebooks/workspacekinds/*',
     },
   },
   {
@@ -49,18 +36,19 @@ const extensions: (NavExtension | RouteExtension | AreaExtension)[] = [
       required: [NOTEBOOKS_V2],
     },
     properties: {
-      path: '/workspaces/*',
+      path: '/notebooks/*',
       component: () => import('./NotebooksWrapper'),
     },
   },
   {
-    type: 'app.route',
+    type: 'app.project-details/tab',
+    properties: {
+      id: 'workbenches-v2',
+      title: 'Workbenches v2',
+      component: () => import('./WorkspacesProjectDetailsTab'),
+    },
     flags: {
       required: [NOTEBOOKS_V2],
-    },
-    properties: {
-      path: '/workspacekinds/*',
-      component: () => import('./NotebooksWrapper'),
     },
   },
 ];

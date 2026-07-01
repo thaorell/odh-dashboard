@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useNamespaceSelector, useModularArchContext } from 'mod-arch-core';
-import { MenuToggle } from '@patternfly/react-core/dist/esm/components/MenuToggle';
 import {
+  MenuToggle,
   Select,
   SelectList,
   SelectOption,
-} from '@patternfly/react-core/dist/esm/components/Select';
+} from '@patternfly/react-core';
 
 interface NamespaceSelectorProps {
   onSelect?: (namespace: string) => void;
@@ -20,17 +20,14 @@ const NamespaceSelector: React.FC<NamespaceSelectorProps> = ({
 }) => {
   const { namespaces = [], preferredNamespace, updatePreferredNamespace } = useNamespaceSelector();
   const { config } = useModularArchContext();
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = React.useState(false);
 
   const isMandatoryNamespace = Boolean(config.mandatoryNamespace);
   const isDisabled = externalDisabled || isMandatoryNamespace || namespaces.length === 0;
 
   const selectedValue = preferredNamespace?.name || namespaces[0]?.name || '';
 
-  const handleSelect = (
-    _event: React.MouseEvent | undefined,
-    value: string | number | undefined,
-  ) => {
+  const handleSelect = (_event: React.MouseEvent | undefined, value: string | number | undefined) => {
     if (typeof value !== 'string' || !value) {
       return;
     }
