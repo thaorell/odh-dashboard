@@ -52,6 +52,7 @@ export type MockDashboardConfigType = {
   observabilityDashboard?: boolean;
   hardwareProfileOrder?: string[];
   pvcSize?: string;
+  notebooksV2?: boolean;
   mcpCatalog?: boolean;
   mcpRegistry?: boolean;
   toolCalling?: boolean;
@@ -83,6 +84,7 @@ export type MockDashboardConfigType = {
 };
 
 export const mockDashboardConfig = ({
+  notebooksV2 = false,
   projectRBAC = false,
   disableInfo = false,
   disableSupport = false,
@@ -277,6 +279,7 @@ export const mockDashboardConfig = ({
   },
   spec: {
     dashboardConfig: {
+      notebooksV2,
       projectRBAC,
       enablement: true,
       disableInfo,
