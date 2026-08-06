@@ -59,6 +59,7 @@ export type DashboardConfig = K8sResourceCommon & {
       modelAsService: boolean;
       externalModels: boolean;
       mlflow: boolean;
+      notebooksV2: boolean;
       mcpCatalog: boolean;
       mcpRegistry: boolean;
       agentOps: boolean;
