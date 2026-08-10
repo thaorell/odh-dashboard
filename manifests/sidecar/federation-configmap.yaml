@@ -184,7 +184,7 @@ data:
           "tls": false,
           "proxy": [
             {
-              "path": "/workspaces/api",
+              "path": "/notebooks/api",
               "pathRewrite": "/api"
             }
           ],
@@ -195,7 +195,7 @@ data:
           "service": {
             "name": "odh-dashboard",
             "namespace": "opendatahub",
-            "port": 8943
+            "port": 9043
         }
       },
       {
