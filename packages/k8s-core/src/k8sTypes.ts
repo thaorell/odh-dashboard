@@ -322,7 +322,7 @@ export type DashboardCommonConfig = {
   connectionTest?: boolean;
   modelCapabilities?: boolean;
   modelDeploymentSettings?: boolean;
-  notebooksV2?: boolean;
+  workbenchesV2?: boolean;
   dataRegistry?: boolean;
 };
 
