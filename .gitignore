@@ -12,7 +12,7 @@ Thumbs.db
 .mcp.json
 
 node_modules
-logs
+/logs
 
 .docs
 .gitkeep
