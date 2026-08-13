@@ -94,6 +94,12 @@ func main() {
 			"Prefix is prepended to absolute URLs returned by this service (e.g. asset URLs for icons/logos).",
 	)
 	flag.BoolVar(
+		&cfg.DisableAuth,
+		"disable-auth",
+		getEnvAsBool("DISABLE_AUTH", false),
+		"Disable authentication and authorization",
+	)
+	flag.BoolVar(
 		&cfg.SwaggerEnabled,
 		"swagger-enabled",
 		getEnvAsBool("SWAGGER_ENABLED", false),

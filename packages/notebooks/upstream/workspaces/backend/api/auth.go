@@ -31,6 +31,10 @@ import (
 // If this method returns true, the request is authenticated and authorized to proceed.
 // This method should only be called once per request.
 func (a *App) requireAuth(w http.ResponseWriter, r *http.Request, policies []*auth.ResourcePolicy) (user.Info, bool) {
+	if a.Config.DisableAuth {
+		return nil, true
+	}
+
 	ctx := r.Context()
 
 	// authenticate the request (extract user and groups from the request headers)

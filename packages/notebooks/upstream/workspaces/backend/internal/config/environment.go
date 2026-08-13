@@ -34,4 +34,6 @@ type EnvConfig struct {
 	SwaggerScheme   string
 	// StaticAssetsDir is the directory containing frontend static assets
 	StaticAssetsDir string
+	// DisableAuth disables authentication and authorization (for development/testing)
+	DisableAuth bool
 }
