@@ -1,4 +1,6 @@
 import React, { useMemo } from 'react';
+import * as monaco from 'monaco-editor';
+import { loader } from '@monaco-editor/react';
 import {
   BrowserStorageContextProvider,
   NotificationContextProvider,
@@ -15,6 +17,17 @@ import { NotebookContextProvider } from '~/app/context/NotebookContext';
 import { BFF_API_VERSION, MANDATORY_NAMESPACE, URL_PREFIX } from '~/shared/utilities/const';
 import { AppContext } from '~/app/context/AppContext';
 import ToastNotifications from '~/app/standalone/ToastNotifications';
+
+window.MonacoEnvironment = {
+  getWorker(_moduleId: string, label: string) {
+    if (label === 'yaml') {
+      return new Worker(new URL('monaco-yaml/yaml.worker', import.meta.url));
+    }
+    return new Worker(new URL('monaco-editor/esm/vs/editor/editor.worker', import.meta.url));
+  },
+};
+
+loader.config({ monaco });
 
 const NotebooksWrapperContent: React.FC = () => {
   const { configSettings, userSettings, loaded, loadError } = useSettings();
