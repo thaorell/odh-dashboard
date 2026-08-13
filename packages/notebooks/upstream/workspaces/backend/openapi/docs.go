@@ -541,7 +541,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/secrets.SecretUpdate"
+                            "$ref": "#/definitions/api.SecretEnvelope"
                         }
                     }
                 ],
@@ -572,6 +572,12 @@ const docTemplate = `{
                     },
                     "404": {
                         "description": "Secret not found",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorEnvelope"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
                         "schema": {
                             "$ref": "#/definitions/api.ErrorEnvelope"
                         }
@@ -607,6 +613,9 @@ const docTemplate = `{
                 "consumes": [
                     "application/json"
                 ],
+                "produces": [
+                    "application/json"
+                ],
                 "tags": [
                     "secrets"
                 ],
@@ -632,7 +641,13 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "204": {
-                        "description": "No Content"
+                        "description": "Secret deleted successfully"
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorEnvelope"
+                        }
                     },
                     "401": {
                         "description": "Unauthorized",
@@ -648,6 +663,18 @@ const docTemplate = `{
                     },
                     "404": {
                         "description": "Secret not found",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorEnvelope"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorEnvelope"
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity. Validation error.",
                         "schema": {
                             "$ref": "#/definitions/api.ErrorEnvelope"
                         }
@@ -708,6 +735,32 @@ const docTemplate = `{
                     },
                     "500": {
                         "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorEnvelope"
+                        }
+                    }
+                }
+            }
+        },
+        "/user": {
+            "get": {
+                "description": "Returns the current user's settings including user ID and admin status",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "user"
+                ],
+                "summary": "Get user settings",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.UserEnvelope"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
                         "schema": {
                             "$ref": "#/definitions/api.ErrorEnvelope"
                         }
@@ -1632,6 +1685,12 @@ const docTemplate = `{
                             "$ref": "#/definitions/api.ErrorEnvelope"
                         }
                     },
+                    "404": {
+                        "description": "Workspace not found",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorEnvelope"
+                        }
+                    },
                     "409": {
                         "description": "Conflict. Current workspace revision is newer than provided.",
                         "schema": {
@@ -1836,6 +1895,174 @@ const docTemplate = `{
                     },
                     "500": {
                         "description": "Internal server error. An unexpected error occurred on the server.",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorEnvelope"
+                        }
+                    }
+                }
+            }
+        },
+        "/workspaces/{namespace}/{name}/podtemplate/details": {
+            "get": {
+                "description": "Returns detail-level data for the workspace details overlay (volumes, secrets, pod info).",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "workspaces"
+                ],
+                "summary": "Get workspace pod template details",
+                "operationId": "getWorkspacePodTemplateDetails",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "x-example": "kubeflow-user-example-com",
+                        "description": "Namespace of the workspace",
+                        "name": "namespace",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "x-example": "my-workspace",
+                        "description": "Name of the workspace",
+                        "name": "name",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation.",
+                        "schema": {
+                            "$ref": "#/definitions/api.WorkspaceDetailsEnvelope"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized.",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorEnvelope"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden.",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorEnvelope"
+                        }
+                    },
+                    "404": {
+                        "description": "Workspace not found.",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorEnvelope"
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity. Validation error.",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorEnvelope"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error.",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorEnvelope"
+                        }
+                    }
+                }
+            }
+        },
+        "/workspaces/{namespace}/{name}/podtemplate/logs/batch": {
+            "get": {
+                "description": "Returns a point-in-time snapshot of container logs for the workspace pod as a raw text/plain stream proxied directly from the Kubernetes pod logs API. Each log line is always prefixed with an RFC3339 timestamp.",
+                "produces": [
+                    "text/plain"
+                ],
+                "tags": [
+                    "workspaces"
+                ],
+                "summary": "Get workspace container logs (batch)",
+                "operationId": "getWorkspacePodTemplateLogsBatch",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "x-example": "kubeflow-user-example-com",
+                        "description": "Namespace of the workspace",
+                        "name": "namespace",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "x-example": "my-workspace",
+                        "description": "Name of the workspace",
+                        "name": "name",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Target container name. Defaults to the primary (main) container.",
+                        "name": "container",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Number of lines from the end of the log to return. Defaults to 1000.",
+                        "name": "tailLines",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Only return logs after this RFC3339 timestamp (e.g. 2026-07-15T10:30:00Z).",
+                        "name": "sinceTime",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "If true, returns logs from the previous terminated container instance.",
+                        "name": "previous",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Raw container log stream (text/plain).",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request. Container not found, pod not running, container not started, or no previous logs available.",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorEnvelope"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized.",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorEnvelope"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden.",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorEnvelope"
+                        }
+                    },
+                    "404": {
+                        "description": "Workspace not found.",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorEnvelope"
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity. Validation error.",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorEnvelope"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error.",
                         "schema": {
                             "$ref": "#/definitions/api.ErrorEnvelope"
                         }
@@ -2050,6 +2277,32 @@ const docTemplate = `{
                 }
             }
         },
+        "api.UserEnvelope": {
+            "type": "object",
+            "required": [
+                "data"
+            ],
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/api.UserResponse"
+                }
+            }
+        },
+        "api.UserResponse": {
+            "type": "object",
+            "required": [
+                "clusterAdmin",
+                "userId"
+            ],
+            "properties": {
+                "clusterAdmin": {
+                    "type": "boolean"
+                },
+                "userId": {
+                    "type": "string"
+                }
+            }
+        },
         "api.ValidationError": {
             "type": "object",
             "properties": {
@@ -2098,6 +2351,17 @@ const docTemplate = `{
             "properties": {
                 "data": {
                     "$ref": "#/definitions/workspaces.WorkspaceCreate"
+                }
+            }
+        },
+        "api.WorkspaceDetailsEnvelope": {
+            "type": "object",
+            "required": [
+                "data"
+            ],
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/details.WorkspaceDetails"
                 }
             }
         },
@@ -2215,6 +2479,168 @@ const docTemplate = `{
                 },
                 "updatedBy": {
                     "type": "string"
+                }
+            }
+        },
+        "common.DenyMessage": {
+            "type": "object",
+            "required": [
+                "text"
+            ],
+            "properties": {
+                "text": {
+                    "type": "string"
+                }
+            }
+        },
+        "common.PodMetadata": {
+            "type": "object",
+            "required": [
+                "annotations",
+                "labels"
+            ],
+            "properties": {
+                "annotations": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "labels": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "common.Restrictions": {
+            "type": "object",
+            "required": [
+                "deny"
+            ],
+            "properties": {
+                "deny": {
+                    "type": "boolean"
+                },
+                "denyMessage": {
+                    "$ref": "#/definitions/common.DenyMessage"
+                }
+            }
+        },
+        "details.PodSecretInfo": {
+            "type": "object",
+            "required": [
+                "mountPath",
+                "secretName"
+            ],
+            "properties": {
+                "defaultMode": {
+                    "type": "integer"
+                },
+                "mountPath": {
+                    "type": "string"
+                },
+                "secretName": {
+                    "type": "string"
+                }
+            }
+        },
+        "details.PodVolumeInfo": {
+            "type": "object",
+            "required": [
+                "mountPath",
+                "pvcName",
+                "readOnly"
+            ],
+            "properties": {
+                "mountPath": {
+                    "type": "string"
+                },
+                "pvcName": {
+                    "type": "string"
+                },
+                "readOnly": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "details.WorkspaceDetailContainer": {
+            "type": "object",
+            "required": [
+                "name"
+            ],
+            "properties": {
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "details.WorkspaceDetailPod": {
+            "type": "object",
+            "required": [
+                "name",
+                "nodeName"
+            ],
+            "properties": {
+                "containers": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/details.WorkspaceDetailContainer"
+                    }
+                },
+                "initContainers": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/details.WorkspaceDetailContainer"
+                    }
+                },
+                "name": {
+                    "type": "string"
+                },
+                "nodeName": {
+                    "type": "string"
+                }
+            }
+        },
+        "details.WorkspaceDetailVolumes": {
+            "type": "object",
+            "required": [
+                "home"
+            ],
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/details.PodVolumeInfo"
+                    }
+                },
+                "home": {
+                    "$ref": "#/definitions/details.PodVolumeInfo"
+                },
+                "secrets": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/details.PodSecretInfo"
+                    }
+                }
+            }
+        },
+        "details.WorkspaceDetails": {
+            "type": "object",
+            "required": [
+                "podMetadata",
+                "volumes"
+            ],
+            "properties": {
+                "pod": {
+                    "$ref": "#/definitions/details.WorkspaceDetailPod"
+                },
+                "podMetadata": {
+                    "$ref": "#/definitions/common.PodMetadata"
+                },
+                "volumes": {
+                    "$ref": "#/definitions/details.WorkspaceDetailVolumes"
                 }
             }
         },
@@ -2399,7 +2825,8 @@ const docTemplate = `{
                 "description",
                 "displayName",
                 "hidden",
-                "id"
+                "id",
+                "restrictions"
             ],
             "properties": {
                 "clusterMetrics": {
@@ -2425,6 +2852,9 @@ const docTemplate = `{
                 },
                 "redirect": {
                     "$ref": "#/definitions/options.OptionRedirect"
+                },
+                "restrictions": {
+                    "$ref": "#/definitions/common.Restrictions"
                 }
             }
         },
@@ -2505,7 +2935,8 @@ const docTemplate = `{
                 "description",
                 "displayName",
                 "hidden",
-                "id"
+                "id",
+                "restrictions"
             ],
             "properties": {
                 "clusterMetrics": {
@@ -2531,6 +2962,9 @@ const docTemplate = `{
                 },
                 "redirect": {
                     "$ref": "#/definitions/options.OptionRedirect"
+                },
+                "restrictions": {
+                    "$ref": "#/definitions/common.Restrictions"
                 }
             }
         },
@@ -2866,7 +3300,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "type": {
-                    "type": "string"
+                    "$ref": "#/definitions/v1.SecretType"
                 }
             }
         },
@@ -2882,9 +3316,7 @@ const docTemplate = `{
                 "audit",
                 "canMount",
                 "canUpdate",
-                "immutable",
-                "name",
-                "type"
+                "name"
             ],
             "properties": {
                 "audit": {
@@ -2896,9 +3328,6 @@ const docTemplate = `{
                 "canUpdate": {
                     "type": "boolean"
                 },
-                "immutable": {
-                    "type": "boolean"
-                },
                 "mounts": {
                     "type": "array",
                     "items": {
@@ -2906,9 +3335,6 @@ const docTemplate = `{
                     }
                 },
                 "name": {
-                    "type": "string"
-                },
-                "type": {
                     "type": "string"
                 }
             }
@@ -2941,13 +3367,18 @@ const docTemplate = `{
             ],
             "properties": {
                 "contents": {
-                    "$ref": "#/definitions/secrets.SecretData"
+                    "description": "Update semantics:\n  - key present with {\"base64\": \"...\"} → set/update the value\n  - key present with {} (Base64 is nil) → preserve the existing value from currentSecret.Data\n  - key omitted from the request → delete that key",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/secrets.SecretData"
+                        }
+                    ]
                 },
                 "immutable": {
                     "type": "boolean"
                 },
                 "type": {
-                    "type": "string"
+                    "$ref": "#/definitions/v1.SecretType"
                 }
             }
         },
@@ -5109,6 +5540,29 @@ const docTemplate = `{
                 }
             }
         },
+        "v1.SecretType": {
+            "type": "string",
+            "enum": [
+                "Opaque",
+                "kubernetes.io/service-account-token",
+                "kubernetes.io/dockercfg",
+                "kubernetes.io/dockerconfigjson",
+                "kubernetes.io/basic-auth",
+                "kubernetes.io/ssh-auth",
+                "kubernetes.io/tls",
+                "bootstrap.kubernetes.io/token"
+            ],
+            "x-enum-varnames": [
+                "SecretTypeOpaque",
+                "SecretTypeServiceAccountToken",
+                "SecretTypeDockercfg",
+                "SecretTypeDockerConfigJson",
+                "SecretTypeBasicAuth",
+                "SecretTypeSSHAuth",
+                "SecretTypeTLS",
+                "SecretTypeBootstrapToken"
+            ]
+        },
         "v1.SecretVolumeSource": {
             "type": "object",
             "properties": {
@@ -5882,48 +6336,62 @@ const docTemplate = `{
         "v1beta1.ActivityProbe": {
             "type": "object",
             "properties": {
-                "exec": {
-                    "description": "a shell command probe\n - if the Workspace had activity in the last 60 seconds this command\n   should return status 0, otherwise it should return status 1\n+kubebuilder:validation:Optional",
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/v1beta1.ActivityProbeExec"
-                        }
-                    ]
-                },
                 "jupyter": {
-                    "description": "a Jupyter-specific probe\n - will poll the ` + "`" + `/api/status` + "`" + ` endpoint of the Jupyter API, and use the ` + "`" + `last_activity` + "`" + ` field\n - note, users need to be careful that their other probes don't trigger a \"last_activity\" update\n   e.g. they should only check the health of Jupyter using the ` + "`" + `/api/status` + "`" + ` endpoint\n+kubebuilder:validation:Optional",
+                    "description": "a Jupyter-specific API probe\n+kubebuilder:validation:Optional",
                     "allOf": [
                         {
                             "$ref": "#/definitions/v1beta1.ActivityProbeJupyter"
                         }
                     ]
-                }
-            }
-        },
-        "v1beta1.ActivityProbeExec": {
-            "type": "object",
-            "required": [
-                "command"
-            ],
-            "properties": {
-                "command": {
-                    "description": "the command to run\n+kubebuilder:validation:MinItems:=1\n+kubebuilder:example={\"bash\", \"-c\", \"exit 0\"}",
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
+                },
+                "minProbeIntervalSeconds": {
+                    "description": "the minimum duration in seconds that must elapse between two consecutive probes.\n- Acts as a rate-limiter for failed probes: if a probe fails, the controller waits at least this long before retrying (requeuing after minProbeInterval).\n- Also acts as a guard: if a reconcile triggers early, the probe is skipped until this interval has elapsed since the last probe.\n+kubebuilder:validation:Minimum:=1\n+kubebuilder:validation:Maximum:=31536000\n+kubebuilder:default:=300\n+kubebuilder:validation:Optional",
+                    "type": "integer"
+                },
+                "podExec": {
+                    "description": "a script-based probe executed in the Pod\n+kubebuilder:validation:Optional",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/v1beta1.ActivityProbePodExec"
+                        }
+                    ]
+                },
+                "probeIntervalSeconds": {
+                    "description": "the desired interval in seconds between successful probes.\n- If a probe succeeds, the controller schedules the next probe after this duration (requeuing after probeInterval).\n- Determines the freshness of workspace activity status used for culling inactive workspaces.\n+kubebuilder:validation:Minimum:=1\n+kubebuilder:validation:Maximum:=31536000\n+kubebuilder:default:=3600\n+kubebuilder:validation:Optional",
+                    "type": "integer"
                 }
             }
         },
         "v1beta1.ActivityProbeJupyter": {
             "type": "object",
             "required": [
-                "lastActivity"
+                "lastActivity",
+                "portId"
             ],
             "properties": {
                 "lastActivity": {
                     "description": "if the Jupyter-specific probe is enabled\n+kubebuilder:example=true",
                     "type": "boolean"
+                },
+                "portId": {
+                    "description": "the port to probe, referencing a port defined in spec.podTemplate.ports",
+                    "type": "string"
+                }
+            }
+        },
+        "v1beta1.ActivityProbePodExec": {
+            "type": "object",
+            "required": [
+                "script"
+            ],
+            "properties": {
+                "script": {
+                    "description": "script is the script to run inside the Pod to determine if the Workspace is active.\nThe script must meet the following requirements:\n - It must start with a shebang (e.g., \"#!/usr/bin/env bash\" or \"#!/usr/bin/env python\").\n - It must exit with a 0 status code. A non-zero exit code is treated as a probe failure (Workspaces with failing probes are not culled).\n - It should be idempotent and without side effects since it can be run multiple times.\n - If the script wants to report an INACTIVE state, it MUST write a JSON object to the file path\n   supplied in the OUTPUT_JSON_PATH environment variable. The fields are evaluated to update the\n   Workspace status field ` + "`" + `status.activity.lastActivity` + "`" + ` as follows:\n     - If ` + "`" + `has_activity` + "`" + ` is explicitly set to ` + "`" + `true` + "`" + ` (or if the JSON file is empty/omitted): The Workspace is treated as active, and ` + "`" + `status.activity.lastActivity` + "`" + ` is updated to the probe completion time (ignoring ` + "`" + `last_activity` + "`" + `).\n     - If ` + "`" + `last_activity` + "`" + ` (ISO 8601 string) is provided and ` + "`" + `has_activity` + "`" + ` is explicitly ` + "`" + `false` + "`" + ` (or omitted): The Workspace is treated as inactive, and ` + "`" + `status.activity.lastActivity` + "`" + ` is updated to the ` + "`" + `last_activity` + "`" + ` timestamp.\n     - If ` + "`" + `has_activity` + "`" + ` is explicitly ` + "`" + `false` + "`" + ` and ` + "`" + `last_activity` + "`" + ` is omitted: The Workspace is treated as inactive, and the existing ` + "`" + `status.activity.lastActivity` + "`" + ` timestamp is preserved (unchanged).\n+kubebuilder:validation:MinLength:=1\n+kubebuilder:validation:MaxLength:=2048",
+                    "type": "string"
+                },
+                "timeoutSeconds": {
+                    "description": "the maximum number of seconds the probe is allowed to run\n+kubebuilder:validation:Minimum:=1\n+kubebuilder:default:=60\n+kubebuilder:validation:Optional",
+                    "type": "integer"
                 }
             }
         },
@@ -6355,30 +6823,6 @@ const docTemplate = `{
                 "WorkspaceKindAssetMediaTypeSVG"
             ]
         },
-        "v1beta1.WorkspaceKindCullingConfig": {
-            "type": "object",
-            "required": [
-                "activityProbe"
-            ],
-            "properties": {
-                "activityProbe": {
-                    "description": "the probe used to determine if the Workspace is active",
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/v1beta1.ActivityProbe"
-                        }
-                    ]
-                },
-                "enabled": {
-                    "description": "if the culling feature is enabled\n+kubebuilder:validation:Optional\n+kubebuilder:default=true",
-                    "type": "boolean"
-                },
-                "maxInactiveSeconds": {
-                    "description": "the maximum number of seconds a Workspace can be inactive\n+kubebuilder:validation:Optional\n+kubebuilder:validation:Minimum:=60\n+kubebuilder:default=86400",
-                    "type": "integer"
-                }
-            }
-        },
         "v1beta1.WorkspaceKindPodMetadata": {
             "type": "object",
             "properties": {
@@ -6428,23 +6872,22 @@ const docTemplate = `{
             "required": [
                 "options",
                 "ports",
-                "serviceAccount",
                 "volumeMounts"
             ],
             "properties": {
+                "activityProbe": {
+                    "description": "activityProbe configs to determine Workspace activity (MUTABLE)\n+kubebuilder:validation:Optional",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/v1beta1.ActivityProbe"
+                        }
+                    ]
+                },
                 "containerSecurityContext": {
                     "description": "container security context for Workspace Pods (MUTABLE)\n+kubebuilder:validation:Optional",
                     "allOf": [
                         {
                             "$ref": "#/definitions/v1.SecurityContext"
-                        }
-                    ]
-                },
-                "culling": {
-                    "description": "culling configs for pausing inactive Workspaces (MUTABLE)\n+kubebuilder:validation:Optional",
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/v1beta1.WorkspaceKindCullingConfig"
                         }
                     ]
                 },
@@ -6509,7 +6952,7 @@ const docTemplate = `{
                     ]
                 },
                 "serviceAccount": {
-                    "description": "service account configs for Workspace Pods",
+                    "description": "service account configs for Workspace Pods\n - currently has no fields, the ServiceAccount used by Workspace Pods is\n   hardcoded to \"default-editor\" in the controller\n - this ServiceAccount MUST already exist in the Namespace of the Workspace,\n   the controller will NOT create it\n+kubebuilder:validation:Optional",
                     "allOf": [
                         {
                             "$ref": "#/definitions/v1beta1.WorkspaceKindServiceAccount"
@@ -6590,16 +7033,7 @@ const docTemplate = `{
             }
         },
         "v1beta1.WorkspaceKindServiceAccount": {
-            "type": "object",
-            "required": [
-                "name"
-            ],
-            "properties": {
-                "name": {
-                    "description": "the name of the ServiceAccount (NOT MUTABLE)\n - this Service Account MUST already exist in the Namespace\n   of the Workspace, the controller will NOT create it\n - we will not show this WorkspaceKind in the Spawner UI\n   if the SA does not exist in the Namespace\n+kubebuilder:validation:XValidation:rule=\"self == oldSelf\",message=\"ServiceAccount 'name' is immutable\"\n+kubebuilder:example=\"default-editor\"\n+kubebuilder:validation:MinLength:=1\n+kubebuilder:validation:MaxLength:=253\n+kubebuilder:validation:Pattern:=^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$",
-                    "type": "string"
-                }
-            }
+            "type": "object"
         },
         "v1beta1.WorkspaceKindSpawner": {
             "type": "object",
@@ -6679,6 +7113,107 @@ const docTemplate = `{
                 "WorkspaceStateUnknown"
             ]
         },
+        "workspacekinds.ActivityProbe": {
+            "type": "object",
+            "required": [
+                "minProbeIntervalSeconds",
+                "probeIntervalSeconds"
+            ],
+            "properties": {
+                "jupyter": {
+                    "$ref": "#/definitions/workspacekinds.ActivityProbeJupyter"
+                },
+                "minProbeIntervalSeconds": {
+                    "type": "integer"
+                },
+                "podExec": {
+                    "$ref": "#/definitions/workspacekinds.ActivityProbePodExec"
+                },
+                "probeIntervalSeconds": {
+                    "type": "integer"
+                }
+            }
+        },
+        "workspacekinds.ActivityProbeJupyter": {
+            "type": "object",
+            "required": [
+                "lastActivity",
+                "portId"
+            ],
+            "properties": {
+                "lastActivity": {
+                    "type": "boolean"
+                },
+                "portId": {
+                    "type": "string"
+                }
+            }
+        },
+        "workspacekinds.ActivityProbePodExec": {
+            "type": "object",
+            "required": [
+                "timeoutSeconds"
+            ],
+            "properties": {
+                "timeoutSeconds": {
+                    "type": "integer"
+                }
+            }
+        },
+        "workspacekinds.ActivityRule": {
+            "type": "object",
+            "required": [
+                "config",
+                "effect"
+            ],
+            "properties": {
+                "config": {
+                    "$ref": "#/definitions/workspacekinds.ActivityRuleConfig"
+                },
+                "effect": {
+                    "$ref": "#/definitions/workspacekinds.ActivityRuleEffect"
+                },
+                "match": {
+                    "$ref": "#/definitions/workspacekinds.ActivityRuleMatch"
+                }
+            }
+        },
+        "workspacekinds.ActivityRuleConfig": {
+            "type": "object",
+            "required": [
+                "secondsSinceActive"
+            ],
+            "properties": {
+                "minRunningSeconds": {
+                    "type": "integer"
+                },
+                "secondsSinceActive": {
+                    "type": "integer"
+                }
+            }
+        },
+        "workspacekinds.ActivityRuleEffect": {
+            "type": "object",
+            "required": [
+                "pauseWorkspace"
+            ],
+            "properties": {
+                "pauseWorkspace": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "workspacekinds.ActivityRuleMatch": {
+            "type": "object",
+            "properties": {
+                "matchNamespace": {
+                    "$ref": "#/definitions/workspacekinds.MatchNamespace"
+                },
+                "matchPodConfig": {
+                    "$ref": "#/definitions/workspacekinds.MatchPodConfig"
+                }
+            }
+        },
         "workspacekinds.ClusterKindMetrics": {
             "type": "object",
             "required": [
@@ -6687,6 +7222,28 @@ const docTemplate = `{
             "properties": {
                 "workspacesCount": {
                     "type": "integer"
+                }
+            }
+        },
+        "workspacekinds.MatchNamespace": {
+            "type": "object",
+            "required": [
+                "selector"
+            ],
+            "properties": {
+                "selector": {
+                    "$ref": "#/definitions/v1.LabelSelector"
+                }
+            }
+        },
+        "workspacekinds.MatchPodConfig": {
+            "type": "object",
+            "required": [
+                "selector"
+            ],
+            "properties": {
+                "selector": {
+                    "$ref": "#/definitions/v1.LabelSelector"
                 }
             }
         },
@@ -6719,6 +7276,9 @@ const docTemplate = `{
                 "volumeMounts"
             ],
             "properties": {
+                "activityProbe": {
+                    "$ref": "#/definitions/workspacekinds.ActivityProbe"
+                },
                 "options": {
                     "description": "TODO: remove once frontend migrates to the new listValues endpoint for both create/update and wsk admin views",
                     "allOf": [
@@ -6777,9 +7337,16 @@ const docTemplate = `{
                 "icon",
                 "logo",
                 "name",
-                "podTemplate"
+                "podTemplate",
+                "restrictions"
             ],
             "properties": {
+                "activityRules": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/workspacekinds.ActivityRule"
+                    }
+                },
                 "clusterMetrics": {
                     "$ref": "#/definitions/workspacekinds.ClusterKindMetrics"
                 },
@@ -6809,6 +7376,9 @@ const docTemplate = `{
                 },
                 "podTemplate": {
                     "$ref": "#/definitions/workspacekinds.PodTemplate"
+                },
+                "restrictions": {
+                    "$ref": "#/definitions/common.Restrictions"
                 }
             }
         },
@@ -6840,15 +7410,38 @@ const docTemplate = `{
             ],
             "properties": {
                 "lastActivity": {
-                    "description": "Unix Epoch time",
+                    "description": "Unix Epoch time in milliseconds",
                     "type": "integer"
                 },
                 "lastProbe": {
                     "$ref": "#/definitions/workspaces.LastProbeInfo"
                 },
                 "lastUpdate": {
-                    "description": "Unix Epoch time",
+                    "description": "Unix Epoch time in milliseconds",
                     "type": "integer"
+                },
+                "rules": {
+                    "$ref": "#/definitions/workspaces.ActivityRules"
+                }
+            }
+        },
+        "workspaces.ActivityPauseRule": {
+            "type": "object",
+            "required": [
+                "eligibleAfter"
+            ],
+            "properties": {
+                "eligibleAfter": {
+                    "description": "Unix Epoch time in milliseconds",
+                    "type": "integer"
+                }
+            }
+        },
+        "workspaces.ActivityRules": {
+            "type": "object",
+            "properties": {
+                "pauseWorkspace": {
+                    "$ref": "#/definitions/workspaces.ActivityPauseRule"
                 }
             }
         },
@@ -6887,13 +7480,13 @@ const docTemplate = `{
         "workspaces.LastProbeInfo": {
             "type": "object",
             "required": [
-                "endTimeMs",
+                "endTime",
                 "message",
                 "result",
-                "startTimeMs"
+                "startTime"
             ],
             "properties": {
-                "endTimeMs": {
+                "endTime": {
                     "description": "Unix Epoch time in milliseconds",
                     "type": "integer"
                 },
@@ -6903,7 +7496,7 @@ const docTemplate = `{
                 "result": {
                     "$ref": "#/definitions/workspaces.ProbeResult"
                 },
-                "startTimeMs": {
+                "startTime": {
                     "description": "Unix Epoch time in milliseconds",
                     "type": "integer"
                 }
@@ -6967,27 +7560,6 @@ const docTemplate = `{
                 }
             }
         },
-        "workspaces.PodMetadata": {
-            "type": "object",
-            "required": [
-                "annotations",
-                "labels"
-            ],
-            "properties": {
-                "annotations": {
-                    "type": "object",
-                    "additionalProperties": {
-                        "type": "string"
-                    }
-                },
-                "labels": {
-                    "type": "object",
-                    "additionalProperties": {
-                        "type": "string"
-                    }
-                }
-            }
-        },
         "workspaces.PodMetadataMutate": {
             "type": "object",
             "required": [
@@ -7006,24 +7578,6 @@ const docTemplate = `{
                     "additionalProperties": {
                         "type": "string"
                     }
-                }
-            }
-        },
-        "workspaces.PodSecretInfo": {
-            "type": "object",
-            "required": [
-                "mountPath",
-                "secretName"
-            ],
-            "properties": {
-                "defaultMode": {
-                    "type": "integer"
-                },
-                "mountPath": {
-                    "type": "string"
-                },
-                "secretName": {
-                    "type": "string"
                 }
             }
         },
@@ -7048,19 +7602,11 @@ const docTemplate = `{
         "workspaces.PodTemplate": {
             "type": "object",
             "required": [
-                "options",
-                "podMetadata",
-                "volumes"
+                "options"
             ],
             "properties": {
                 "options": {
                     "$ref": "#/definitions/workspaces.PodTemplateOptions"
-                },
-                "podMetadata": {
-                    "$ref": "#/definitions/workspaces.PodMetadata"
-                },
-                "volumes": {
-                    "$ref": "#/definitions/workspaces.PodVolumes"
                 }
             }
         },
@@ -7113,25 +7659,6 @@ const docTemplate = `{
                 }
             }
         },
-        "workspaces.PodVolumeInfo": {
-            "type": "object",
-            "required": [
-                "mountPath",
-                "pvcName",
-                "readOnly"
-            ],
-            "properties": {
-                "mountPath": {
-                    "type": "string"
-                },
-                "pvcName": {
-                    "type": "string"
-                },
-                "readOnly": {
-                    "type": "boolean"
-                }
-            }
-        },
         "workspaces.PodVolumeMount": {
             "type": "object",
             "required": [
@@ -7147,29 +7674,6 @@ const docTemplate = `{
                 },
                 "readOnly": {
                     "type": "boolean"
-                }
-            }
-        },
-        "workspaces.PodVolumes": {
-            "type": "object",
-            "required": [
-                "data"
-            ],
-            "properties": {
-                "data": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/workspaces.PodVolumeInfo"
-                    }
-                },
-                "home": {
-                    "$ref": "#/definitions/workspaces.PodVolumeInfo"
-                },
-                "secrets": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/workspaces.PodSecretInfo"
-                    }
                 }
             }
         },
@@ -7272,6 +7776,10 @@ const docTemplate = `{
                 "podTemplate"
             ],
             "properties": {
+                "displayName": {
+                    "description": "DisplayName is an optional human-readable name for the workspace.",
+                    "type": "string"
+                },
                 "kind": {
                     "type": "string"
                 },
@@ -7314,11 +7822,11 @@ const docTemplate = `{
             "required": [
                 "activity",
                 "audit",
+                "lastRunningTime",
                 "name",
                 "namespace",
                 "paused",
                 "pausedTime",
-                "pendingRestart",
                 "podTemplate",
                 "services",
                 "state",
@@ -7332,6 +7840,14 @@ const docTemplate = `{
                 "audit": {
                     "$ref": "#/definitions/common.Audit"
                 },
+                "displayName": {
+                    "description": "DisplayName is an optional human-readable name for the workspace.",
+                    "type": "string"
+                },
+                "lastRunningTime": {
+                    "description": "Unix Epoch time in milliseconds",
+                    "type": "integer"
+                },
                 "name": {
                     "type": "string"
                 },
@@ -7342,10 +7858,8 @@ const docTemplate = `{
                     "type": "boolean"
                 },
                 "pausedTime": {
+                    "description": "Unix Epoch time in milliseconds",
                     "type": "integer"
-                },
-                "pendingRestart": {
-                    "type": "boolean"
                 },
                 "podTemplate": {
                     "$ref": "#/definitions/workspaces.PodTemplate"
@@ -7375,6 +7889,10 @@ const docTemplate = `{
                 "revision"
             ],
             "properties": {
+                "displayName": {
+                    "description": "DisplayName is an optional human-readable name for the workspace.",
+                    "type": "string"
+                },
                 "paused": {
                     "description": "TODO: remove ` + "`" + `paused` + "`" + ` once we have an \"actions\" api for pausing workspaces",
                     "type": "boolean"

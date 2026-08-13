@@ -27,6 +27,7 @@ import (
 
 	"github.com/kubeflow/notebooks/workspaces/backend/internal/helper"
 	"github.com/kubeflow/notebooks/workspaces/backend/internal/models/common"
+	commonWorkspaces "github.com/kubeflow/notebooks/workspaces/backend/internal/models/workspaces/common"
 )
 
 /*
@@ -39,6 +40,7 @@ import (
 func NewWorkspaceCreateModelFromWorkspace(ws *kubefloworgv1beta1.Workspace) *WorkspaceCreate {
 	return &WorkspaceCreate{
 		Name:        ws.Name,
+		DisplayName: ptr.Deref(ws.Spec.DisplayName, ""),
 		Kind:        ws.Spec.Kind,
 		Paused:      ptr.Deref(ws.Spec.Paused, false),
 		PodTemplate: buildPodTemplateMutate(ws),
@@ -49,6 +51,7 @@ func NewWorkspaceCreateModelFromWorkspace(ws *kubefloworgv1beta1.Workspace) *Wor
 func NewWorkspaceUpdateModelFromWorkspace(ws *kubefloworgv1beta1.Workspace) *WorkspaceUpdate {
 	return &WorkspaceUpdate{
 		Revision:    common.CalculateRevision(&ws.ObjectMeta),
+		DisplayName: ptr.Deref(ws.Spec.DisplayName, ""),
 		Paused:      ptr.Deref(ws.Spec.Paused, false),
 		PodTemplate: buildPodTemplateMutate(ws),
 	}
@@ -56,11 +59,11 @@ func NewWorkspaceUpdateModelFromWorkspace(ws *kubefloworgv1beta1.Workspace) *Wor
 
 // buildPodTemplateMutate constructs a PodTemplateMutate from a Workspace spec.
 func buildPodTemplateMutate(ws *kubefloworgv1beta1.Workspace) PodTemplateMutate {
-	podLabels, podAnnotations := extractPodMetadata(ws)
+	podMetadata := commonWorkspaces.ExtractPodMetadata(ws)
 	return PodTemplateMutate{
 		PodMetadata: PodMetadataMutate{
-			Labels:      podLabels,
-			Annotations: podAnnotations,
+			Labels:      podMetadata.Labels,
+			Annotations: podMetadata.Annotations,
 		},
 		Volumes: PodVolumesMutate{
 			Home:    ws.Spec.PodTemplate.Volumes.Home,
@@ -72,22 +75,6 @@ func buildPodTemplateMutate(ws *kubefloworgv1beta1.Workspace) PodTemplateMutate 
 			PodConfig:   ws.Spec.PodTemplate.Options.PodConfig,
 		},
 	}
-}
-
-// extractPodMetadata extracts and copies pod labels and annotations from a Workspace spec.
-// Returns copies of the maps to avoid creating references to the original maps.
-func extractPodMetadata(ws *kubefloworgv1beta1.Workspace) (labels map[string]string, annotations map[string]string) {
-	labels = make(map[string]string)
-	annotations = make(map[string]string)
-	if ws.Spec.PodTemplate.PodMetadata != nil {
-		for k, v := range ws.Spec.PodTemplate.PodMetadata.Labels {
-			labels[k] = v
-		}
-		for k, v := range ws.Spec.PodTemplate.PodMetadata.Annotations {
-			annotations[k] = v
-		}
-	}
-	return labels, annotations
 }
 
 // extractDataVolumes converts workspace data volumes to PodVolumeMount slice.
@@ -156,7 +143,7 @@ func validateAndUnpackVolumes(
 		dataVolumeMounts[i] = kubefloworgv1beta1.PodVolumeMount{
 			PVCName:   dataVolumeName,
 			MountPath: dataVolume.MountPath,
-			ReadOnly:  ptr.To(dataVolume.ReadOnly),
+			ReadOnly:  new(dataVolume.ReadOnly),
 		}
 	}
 
@@ -226,6 +213,7 @@ func NewWorkspaceFromWorkspaceCreateModel(ctx context.Context, k8sClient client.
 		},
 		Spec: kubefloworgv1beta1.WorkspaceSpec{
 			Paused:      &workspaceCreate.Paused,
+			DisplayName: displayNamePtr(workspaceCreate.DisplayName),
 			Kind:        workspaceCreate.Kind,
 			PodTemplate: buildWorkspacePodTemplate(&workspaceCreate.PodTemplate, homeVolumeName, dataVolumeMounts, secretMounts),
 		},
@@ -243,8 +231,16 @@ func ApplyWorkspaceUpdateModelToWorkspace(ctx context.Context, k8sClient client.
 	}
 
 	// apply model fields to workspace spec
-	workspace.Spec.Paused = ptr.To(workspaceUpdate.Paused)
+	workspace.Spec.Paused = new(workspaceUpdate.Paused)
+	workspace.Spec.DisplayName = displayNamePtr(workspaceUpdate.DisplayName)
 	workspace.Spec.PodTemplate = buildWorkspacePodTemplate(&workspaceUpdate.PodTemplate, workspaceUpdate.PodTemplate.Volumes.Home, dataVolumeMounts, secretMounts)
 
 	return nil
+}
+
+func displayNamePtr(displayName string) *string {
+	if displayName == "" {
+		return nil
+	}
+	return new(displayName)
 }

@@ -20,8 +20,6 @@ import (
 	"fmt"
 	"time"
 
-	"k8s.io/utils/ptr"
-
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 
@@ -49,6 +47,9 @@ var _ = Describe("Workspace Controller", func() {
 
 		// how frequently to poll for conditions
 		interval = time.Millisecond * 250
+
+		// tolerance for timestamp comparisons (in milliseconds)
+		tolerance = int64(5000)
 	)
 
 	Context("When updating a Workspace", Ordered, func() {
@@ -136,12 +137,11 @@ var _ = Describe("Workspace Controller", func() {
 			By("pausing the Workspace")
 			patch := client.MergeFrom(workspace.DeepCopy())
 			newWorkspace := workspace.DeepCopy()
-			newWorkspace.Spec.Paused = ptr.To(true)
+			newWorkspace.Spec.Paused = new(true)
 			Expect(k8sClient.Patch(ctx, newWorkspace, patch)).To(Succeed())
 
 			By("setting the Workspace `status.pauseTime` to the current time")
-			tolerance := int64(5)
-			currentTime := time.Now().Unix()
+			currentTime := time.Now().UnixMilli()
 			Eventually(func() (int64, error) {
 				err := k8sClient.Get(ctx, types.NamespacedName{Name: workspaceName, Namespace: namespaceName}, workspace)
 				if err != nil {
@@ -153,7 +153,7 @@ var _ = Describe("Workspace Controller", func() {
 			By("un-pausing the Workspace")
 			patch = client.MergeFrom(workspace.DeepCopy())
 			newWorkspace = workspace.DeepCopy()
-			newWorkspace.Spec.Paused = ptr.To(false)
+			newWorkspace.Spec.Paused = new(false)
 			Expect(k8sClient.Patch(ctx, newWorkspace, patch)).To(Succeed())
 
 			By("setting the Workspace `status.pauseTime` to 0")
@@ -175,8 +175,10 @@ var _ = Describe("Workspace Controller", func() {
 				return statefulSetList.Items, nil
 			}, timeout, interval).Should(HaveLen(1))
 
-			// TODO: use this to get the StatefulSet
-			// statefulSet := statefulSetList.Items[0]
+			statefulSet := statefulSetList.Items[0]
+
+			By("running the Workspace Pods as the hardcoded ServiceAccount")
+			Expect(statefulSet.Spec.Template.Spec.ServiceAccountName).To(Equal(workspaceServiceAccountName))
 
 			By("creating a Service")
 			serviceList := &corev1.ServiceList{}
@@ -268,7 +270,7 @@ var _ = Describe("Workspace Controller", func() {
 
 		It("should not rewrite the URI when `removePathPrefix` is false", func() {
 			By("generating the VirtualService")
-			workspaceKind.Spec.PodTemplate.Ports[0].HTTPProxy.RemovePathPrefix = ptr.To(false)
+			workspaceKind.Spec.PodTemplate.Ports[0].HTTPProxy.RemovePathPrefix = new(false)
 			virtualService, err := reconciler.generateVirtualService(workspace, workspaceKind, service, imageConfigSpec)
 			Expect(err).NotTo(HaveOccurred())
 
@@ -279,7 +281,7 @@ var _ = Describe("Workspace Controller", func() {
 
 		It("should rewrite the URI to '/' when `removePathPrefix` is true", func() {
 			By("generating the VirtualService")
-			workspaceKind.Spec.PodTemplate.Ports[0].HTTPProxy.RemovePathPrefix = ptr.To(true)
+			workspaceKind.Spec.PodTemplate.Ports[0].HTTPProxy.RemovePathPrefix = new(true)
 			virtualService, err := reconciler.generateVirtualService(workspace, workspaceKind, service, imageConfigSpec)
 			Expect(err).NotTo(HaveOccurred())
 

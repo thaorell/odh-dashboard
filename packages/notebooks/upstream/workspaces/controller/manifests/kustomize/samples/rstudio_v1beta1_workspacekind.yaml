@@ -3,6 +3,12 @@ kind: WorkspaceKind
 metadata:
   name: rstudio
 spec:
+  activityRules:
+    - config:
+        secondsSinceActive: 7200
+      match: {}
+      effect:
+        pauseWorkspace: true
   spawner:
     displayName: "RStudio"
     description: "A Workspace which runs RStudio in a Pod"
@@ -10,12 +16,48 @@ spec:
       url: "https://upload.wikimedia.org/wikipedia/commons/1/1b/R_logo.svg"
     logo:
       url: "https://upload.wikimedia.org/wikipedia/commons/1/1b/R_logo.svg"
+
+  ## ================================================================
+  ## FILTER RULES
+  ##  - admin-defined rules used by the backend API server to dynamically filter
+  ##    which WorkspaceKinds, imageConfig values, and podConfig values are visible
+  ##    or allowed in a given context
+  ##  - the controller does NOT evaluate these rules, it only persists and validates them
+  ## ================================================================
+  filterRules:
+
+    ## hide GPU podConfigs when the selected imageConfig is not a CUDA image
+    ##  - this is a cross-option rule: the podConfig visibility depends on the imageConfig selection
+    - scope: POD_CONFIG
+      effect:
+        ui:
+          hide: true
+      match:
+        - matchImageConfig:
+            selector:
+              matchExpressions:
+                - key: "cuda_version"
+                  operator: DoesNotExist
+        - matchPodConfig:
+            selector:
+              matchExpressions:
+                - key: "gpu"
+                  operator: Exists
+
   podTemplate:
     podMetadata:
       labels: {}
       annotations: {}
-    serviceAccount:
-      name: "default-editor"
+    activityProbe:
+      minProbeIntervalSeconds: 300
+      probeIntervalSeconds: 3600
+      podExec:
+        timeoutSeconds: 60
+        script: |-
+          #!/usr/bin/env bash
+          # A mock probe that always reports activity (replace with real detection logic)
+          echo '{"has_activity": true}' > "$OUTPUT_JSON_PATH"
+          exit 0
     volumeMounts:
       home: "/home/jovyan"
     ports:
@@ -38,12 +80,16 @@ spec:
           medium: "Memory"
     securityContext:
       fsGroup: 100
+      seccompProfile:
+        type: RuntimeDefault
     containerSecurityContext:
       allowPrivilegeEscalation: false
       capabilities:
         drop:
           - ALL
       runAsNonRoot: true
+      seccompProfile:
+        type: RuntimeDefault
     options:
       imageConfig:
         spawner:

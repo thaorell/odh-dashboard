@@ -22,6 +22,7 @@ import (
 	"os"
 	"strconv"
 
+	"k8s.io/client-go/kubernetes"
 	ctrl "sigs.k8s.io/controller-runtime"
 
 	application "github.com/kubeflow/notebooks/workspaces/backend/api"
@@ -117,7 +118,16 @@ func main() {
 		"Scheme used in the Swagger UI (http or https)",
 	)
 
-	// Override Swagger metadata with runtime config
+	flag.StringVar(
+		&cfg.StaticAssetsDir,
+		"static-assets-dir",
+		getEnvAsStr("STATIC_ASSETS_DIR", "/static"),
+		"Directory containing frontend static assets",
+	)
+
+	flag.Parse()
+
+	// Override Swagger metadata with runtime config (must be after flag.Parse)
 	if cfg.SwaggerEnabled {
 		openapi.SwaggerInfo.Host = cfg.SwaggerHost
 		openapi.SwaggerInfo.BasePath = cfg.SwaggerBasePath
@@ -147,6 +157,12 @@ func main() {
 	mgr, err := helper.NewManager(kubeconfig, scheme)
 	if err != nil {
 		logger.Error("unable to create manager", "error", err)
+		os.Exit(1)
+	}
+
+	clientset, err := kubernetes.NewForConfig(kubeconfig)
+	if err != nil {
+		logger.Error("failed to create Kubernetes clientset", "error", err)
 		os.Exit(1)
 	}
 
@@ -181,6 +197,7 @@ func main() {
 		mgr.GetScheme(),
 		reqAuthN,
 		reqAuthZ,
+		clientset,
 	)
 	if err != nil {
 		logger.Error("failed to create app", "error", err)

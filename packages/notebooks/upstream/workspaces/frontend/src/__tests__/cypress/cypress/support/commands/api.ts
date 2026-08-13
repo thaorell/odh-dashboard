@@ -11,6 +11,7 @@ import type {
   ApiStorageClassListEnvelope,
   ApiWorkspaceActionPauseEnvelope,
   ApiWorkspaceCreateEnvelope,
+  ApiWorkspaceDetailsEnvelope,
   ApiWorkspaceEnvelope,
   ApiWorkspaceKindCreateEnvelope,
   ApiWorkspaceKindEnvelope,
@@ -80,6 +81,11 @@ declare global {
           response: ApiWorkspaceActionPauseEnvelope | ApiErrorEnvelope,
         ) => Cypress.Chainable<null>) &
         ((
+          type: 'GET /api/:apiVersion/workspaces/:namespace/:workspaceName/podtemplate/details',
+          options: { path: { apiVersion: string; namespace: string; workspaceName: string } },
+          response: ApiWorkspaceDetailsEnvelope | ApiErrorEnvelope,
+        ) => Cypress.Chainable<null>) &
+        ((
           type: 'PUT /api/:apiVersion/workspaces/:namespace/:workspaceName',
           options: { path: { apiVersion: string; namespace: string; workspaceName: string } },
           response: ApiWorkspaceEnvelope | ApiErrorEnvelope,
@@ -103,6 +109,11 @@ declare global {
           type: 'PUT /api/:apiVersion/workspacekinds/:kind',
           options: { path: { apiVersion: string; kind: string } },
           response: ApiWorkspaceKindEnvelope | ApiErrorEnvelope,
+        ) => Cypress.Chainable<null>) &
+        ((
+          type: 'DELETE /api/:apiVersion/workspacekinds/:kind',
+          options: { path: { apiVersion: string; kind: string } },
+          response: void | ApiErrorEnvelope,
         ) => Cypress.Chainable<null>) &
         ((
           type: 'POST /api/:apiVersion/workspacekinds/:kind/podtemplate/options/listvalues',

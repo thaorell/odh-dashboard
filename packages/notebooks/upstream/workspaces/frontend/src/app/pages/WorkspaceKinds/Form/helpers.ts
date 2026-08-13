@@ -89,6 +89,48 @@ export const isValidWorkspaceKindYaml = (data: any): boolean => {
   return true;
 };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
+export const isValidWorkspaceKindUpdate = (data: any): boolean => {
+  if (!data || typeof data !== 'object') {
+    return false;
+  }
+  const obj = data as Record<string, unknown>;
+
+  if (typeof obj.revision !== 'string' || !obj.revision) {
+    return false;
+  }
+
+  if (
+    typeof obj.spawner !== 'object' ||
+    !obj.spawner ||
+    typeof (obj.spawner as Record<string, unknown>).displayName !== 'string' ||
+    typeof (obj.spawner as Record<string, unknown>).description !== 'string'
+  ) {
+    return false;
+  }
+
+  if (typeof obj.podTemplate !== 'object' || !obj.podTemplate) {
+    return false;
+  }
+
+  const podTemplate = obj.podTemplate as Record<string, unknown>;
+  if (typeof podTemplate.options !== 'object' || !podTemplate.options) {
+    return false;
+  }
+
+  const options = podTemplate.options as Record<string, unknown>;
+  if (
+    typeof options.imageConfig !== 'object' ||
+    !options.imageConfig ||
+    typeof options.podConfig !== 'object' ||
+    !options.podConfig
+  ) {
+    return false;
+  }
+
+  return true;
+};
+
 export const emptyImage = {
   id: '',
   displayName: '',
@@ -108,6 +150,9 @@ export const emptyImage = {
   redirect: {
     to: '',
   },
+  restrictions: {
+    deny: false,
+  },
 };
 
 export const emptyPodConfig: OptionsPodConfigValue = {
@@ -118,6 +163,9 @@ export const emptyPodConfig: OptionsPodConfigValue = {
   hidden: false,
   redirect: {
     to: '',
+  },
+  restrictions: {
+    deny: false,
   },
 };
 
@@ -148,15 +196,6 @@ export const EMPTY_WORKSPACE_KIND_FORM_DATA = {
       home: '',
     },
     extraVolumeMounts: [],
-    culling: {
-      enabled: false,
-      maxInactiveSeconds: 86400,
-      activityProbe: {
-        jupyter: {
-          lastActivity: true,
-        },
-      },
-    },
   },
 };
 export const emptyToleration = (): TolerationEntry => ({
@@ -194,8 +233,12 @@ export const convertFormDataToUpdate = (
     deprecated: formData.properties.deprecated,
     deprecationMessage: formData.properties.deprecationMessage || undefined,
     hidden: formData.properties.hidden,
-    icon: { url: formData.properties.icon.url || undefined },
-    logo: { url: formData.properties.logo.url || undefined },
+    icon: formData.properties.icon.configMap
+      ? { configMap: formData.properties.icon.configMap }
+      : { url: formData.properties.icon.url || undefined },
+    logo: formData.properties.logo.configMap
+      ? { configMap: formData.properties.logo.configMap }
+      : { url: formData.properties.logo.url || undefined },
   },
   podTemplate: {
     ...original.podTemplate,
@@ -203,74 +246,74 @@ export const convertFormDataToUpdate = (
       labels: formData.podTemplate.podMetadata.labels,
       annotations: formData.podTemplate.podMetadata.annotations,
     },
-    volumeMounts: {
-      home: formData.podTemplate.volumeMounts.home,
-    },
-    culling: formData.podTemplate.culling
-      ? {
-          enabled: formData.podTemplate.culling.enabled,
-          maxInactiveSeconds: formData.podTemplate.culling.maxInactiveSeconds,
-          activityProbe: {
-            jupyter: {
-              lastActivity: formData.podTemplate.culling.activityProbe.jupyter.lastActivity,
-            },
-          },
-        }
-      : original.podTemplate.culling,
+    volumeMounts: original.podTemplate.volumeMounts,
+    activityProbe: formData.podTemplate.activityProbe,
     options: {
       imageConfig: {
         spawner: { default: formData.imageConfig.default },
-        values: (formData.imageConfig.values ?? []).map((v) => ({
-          id: v.id,
-          redirect: convertRedirectToApi(v.redirect),
-          spawner: {
-            displayName: v.displayName,
-            description: v.description || undefined,
-            hidden: v.hidden,
-            labels: v.labels?.map((l) => ({ key: l.key, value: l.value })),
-          },
-          spec: {
-            image: v.image ?? '',
-            imagePullPolicy: (v.imagePullPolicy ??
-              ImagePullPolicy.IfNotPresent) as unknown as V1PullPolicy,
-            ports: (v.ports ?? []).map((p) => ({
-              id: p.id,
-              displayName: p.displayName || undefined,
-              port: p.port,
-            })),
-          },
-        })),
+        values: (formData.imageConfig.values ?? []).map((v) => {
+          const originalValue = original.podTemplate.options.imageConfig.values.find(
+            (ov) => ov.id === v.id,
+          );
+          return {
+            id: v.id,
+            redirect: convertRedirectToApi(v.redirect),
+            spawner: {
+              displayName: v.displayName,
+              description: v.description || undefined,
+              hidden: v.hidden,
+              labels: v.labels?.map((l) => ({ key: l.key, value: l.value })),
+            },
+            spec: {
+              ...originalValue?.spec,
+              image: v.image ?? '',
+              imagePullPolicy: (v.imagePullPolicy ??
+                ImagePullPolicy.IfNotPresent) as unknown as V1PullPolicy,
+              ports: (v.ports ?? []).map((p) => ({
+                id: p.id,
+                displayName: p.displayName || undefined,
+                port: p.port,
+              })),
+            },
+          };
+        }),
       },
       podConfig: {
         spawner: { default: formData.podConfig.default },
-        values: (formData.podConfig.values ?? []).map((v) => ({
-          id: v.id,
-          redirect: convertRedirectToApi(v.redirect),
-          spawner: {
-            displayName: v.displayName,
-            description: v.description || undefined,
-            hidden: v.hidden,
-            labels: v.labels?.map((l) => ({ key: l.key, value: l.value })),
-          },
-          spec: {
-            resources: v.resources
-              ? {
-                  requests: v.resources.requests as V1ResourceList,
-                  limits: v.resources.limits as V1ResourceList,
-                }
-              : undefined,
-            nodeSelector: v.nodeSelector,
-            tolerations: v.tolerations?.map(
-              (t): V1Toleration => ({
-                operator: t.operator,
-                effect: t.effect,
-                key: t.key,
-                value: t.value,
-                tolerationSeconds: t.tolerationSeconds,
-              }),
-            ),
-          },
-        })),
+        values: (formData.podConfig.values ?? []).map((v) => {
+          const originalValue = original.podTemplate.options.podConfig.values.find(
+            (ov) => ov.id === v.id,
+          );
+          return {
+            id: v.id,
+            redirect: convertRedirectToApi(v.redirect),
+            spawner: {
+              displayName: v.displayName,
+              description: v.description || undefined,
+              hidden: v.hidden,
+              labels: v.labels?.map((l) => ({ key: l.key, value: l.value })),
+            },
+            spec: {
+              ...originalValue?.spec,
+              resources: v.resources
+                ? {
+                    requests: v.resources.requests as V1ResourceList,
+                    limits: v.resources.limits as V1ResourceList,
+                  }
+                : undefined,
+              nodeSelector: v.nodeSelector,
+              tolerations: v.tolerations?.map(
+                (t): V1Toleration => ({
+                  operator: t.operator,
+                  effect: t.effect,
+                  key: t.key,
+                  value: t.value,
+                  tolerationSeconds: t.tolerationSeconds,
+                }),
+              ),
+            },
+          };
+        }),
       },
     },
   },

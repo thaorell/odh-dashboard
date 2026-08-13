@@ -19,6 +19,7 @@ package controller
 import (
 	"context"
 	"fmt"
+	"maps"
 	"strings"
 	"time"
 
@@ -58,6 +59,12 @@ const (
 
 	// pod template constants
 	workspacePodTemplateContainerName = "main"
+
+	// the ServiceAccount used by all Workspace Pods, it MUST already exist in the
+	// Namespace of the Workspace, the controller will NOT create it
+	// TODO: replace with per-Workspace ServiceAccounts
+	//       https://github.com/kubeflow/notebooks/issues/1257
+	workspaceServiceAccountName = "default-editor"
 
 	// lengths for resource names
 	generateNameSuffixLength    = 6
@@ -263,11 +270,11 @@ func (r *WorkspaceReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 			log.Error(err, "unable to create StatefulSet")
 			return ctrl.Result{}, err
 		}
-		statefulSetName = statefulSet.ObjectMeta.Name
+		statefulSetName = statefulSet.Name
 		log.V(2).Info("StatefulSet created", "statefulSet", statefulSetName)
 	default:
 		foundStatefulSet := &ownedStatefulSets.Items[0]
-		statefulSetName = foundStatefulSet.ObjectMeta.Name
+		statefulSetName = foundStatefulSet.Name
 		if helper.CopyStatefulSetFields(statefulSet, foundStatefulSet) {
 			if err := r.Update(ctx, foundStatefulSet); err != nil {
 				if apierrors.IsConflict(err) {
@@ -328,11 +335,11 @@ func (r *WorkspaceReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 			log.Error(err, "unable to create Service")
 			return ctrl.Result{}, err
 		}
-		serviceName = service.ObjectMeta.Name
+		serviceName = service.Name
 		log.V(2).Info("Service created", "service", serviceName)
 	default:
 		foundService := &ownedServices.Items[0]
-		serviceName = foundService.ObjectMeta.Name
+		serviceName = foundService.Name
 		if helper.CopyServiceFields(service, foundService) {
 			if err := r.Update(ctx, foundService); err != nil {
 				if apierrors.IsConflict(err) {
@@ -395,11 +402,11 @@ func (r *WorkspaceReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 				log.Error(err, "unable to create VirtualService")
 				return ctrl.Result{}, err
 			}
-			virtualServiceName = virtualsvc.ObjectMeta.Name
+			virtualServiceName = virtualsvc.Name
 			log.V(2).Info("VirtualService created", "virtualService", virtualServiceName)
 		default:
 			foundVirtualService := ownedVirtualServices.Items[0]
-			virtualServiceName = foundVirtualService.ObjectMeta.Name
+			virtualServiceName = foundVirtualService.Name
 			if helper.CopyVirtualServiceFields(virtualsvc, foundVirtualService) {
 				if err := r.Update(ctx, foundVirtualService); err != nil {
 					if apierrors.IsConflict(err) {
@@ -561,10 +568,7 @@ func getImageConfig(workspace *kubefloworgv1beta1.Workspace, workspaceKind *kube
 	desiredImageConfig := currentImageConfig
 	var redirectChain []kubefloworgv1beta1.WorkspacePodOptionRedirectStep
 	visitedNodes := map[string]bool{currentImageConfig.Id: true}
-	for {
-		if desiredImageConfig.Redirect == nil {
-			break
-		}
+	for desiredImageConfig.Redirect != nil {
 		if visitedNodes[desiredImageConfig.Redirect.To] {
 			return nil, nil, nil, fmt.Errorf("imageConfig with id %q has a circular redirect", desiredImageConfig.Id)
 		}
@@ -606,10 +610,7 @@ func getPodConfig(workspace *kubefloworgv1beta1.Workspace, workspaceKind *kubefl
 	desiredPodConfig := currentPodConfig
 	var redirectChain []kubefloworgv1beta1.WorkspacePodOptionRedirectStep
 	visitedNodes := map[string]bool{currentPodConfig.Id: true}
-	for {
-		if desiredPodConfig.Redirect == nil {
-			break
-		}
+	for desiredPodConfig.Redirect != nil {
 		if visitedNodes[desiredPodConfig.Redirect.To] {
 			return nil, nil, nil, fmt.Errorf("podConfig with id %q has a circular redirect", desiredPodConfig.Id)
 		}
@@ -654,7 +655,7 @@ func generateNamePrefix(workspaceName string, maxLength int) string {
 }
 
 // generateStatefulSet generates a StatefulSet for a Workspace
-func generateStatefulSet(workspace *kubefloworgv1beta1.Workspace, workspaceKind *kubefloworgv1beta1.WorkspaceKind, imageConfigSpec kubefloworgv1beta1.ImageConfigSpec, podConfigSpec kubefloworgv1beta1.PodConfigSpec) (*appsv1.StatefulSet, error) { //nolint:gocyclo
+func generateStatefulSet(workspace *kubefloworgv1beta1.Workspace, workspaceKind *kubefloworgv1beta1.WorkspaceKind, imageConfigSpec kubefloworgv1beta1.ImageConfigSpec, podConfigSpec kubefloworgv1beta1.PodConfigSpec) (*appsv1.StatefulSet, error) {
 	// generate name prefix
 	namePrefix := generateNamePrefix(workspace.Name, maxStatefulSetNameLength)
 
@@ -669,20 +670,12 @@ func generateStatefulSet(workspace *kubefloworgv1beta1.Workspace, workspaceKind 
 	podAnnotations := make(map[string]string)
 	podLabels := make(map[string]string)
 	if workspaceKind.Spec.PodTemplate.PodMetadata != nil {
-		for k, v := range workspaceKind.Spec.PodTemplate.PodMetadata.Annotations {
-			podAnnotations[k] = v
-		}
-		for k, v := range workspaceKind.Spec.PodTemplate.PodMetadata.Labels {
-			podLabels[k] = v
-		}
+		maps.Copy(podAnnotations, workspaceKind.Spec.PodTemplate.PodMetadata.Annotations)
+		maps.Copy(podLabels, workspaceKind.Spec.PodTemplate.PodMetadata.Labels)
 	}
 	if workspace.Spec.PodTemplate.PodMetadata != nil {
-		for k, v := range workspace.Spec.PodTemplate.PodMetadata.Annotations {
-			podAnnotations[k] = v
-		}
-		for k, v := range workspace.Spec.PodTemplate.PodMetadata.Labels {
-			podLabels[k] = v
-		}
+		maps.Copy(podAnnotations, workspace.Spec.PodTemplate.PodMetadata.Annotations)
+		maps.Copy(podLabels, workspace.Spec.PodTemplate.PodMetadata.Labels)
 	}
 
 	// generate container imagePullPolicy
@@ -922,7 +915,7 @@ func generateStatefulSet(workspace *kubefloworgv1beta1.Workspace, workspaceKind 
 					},
 					NodeSelector:       podConfigSpec.NodeSelector,
 					SecurityContext:    workspaceKind.Spec.PodTemplate.SecurityContext,
-					ServiceAccountName: workspaceKind.Spec.PodTemplate.ServiceAccount.Name,
+					ServiceAccountName: workspaceServiceAccountName,
 					Tolerations:        podConfigSpec.Tolerations,
 					Volumes:            volumes,
 				},
@@ -1139,7 +1132,7 @@ func (r *WorkspaceReconciler) generateWorkspaceStatus(ctx context.Context, log l
 	workspacePaused := ptr.Deref(workspace.Spec.Paused, false)
 	if workspacePaused {
 		if status.PauseTime == 0 {
-			status.PauseTime = metav1.Now().Unix()
+			status.PauseTime = metav1.Now().UnixMilli()
 		}
 	} else {
 		if status.PauseTime != 0 {

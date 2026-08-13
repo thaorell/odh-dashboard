@@ -24,10 +24,11 @@ import (
 	"k8s.io/utils/ptr"
 
 	"github.com/kubeflow/notebooks/workspaces/backend/internal/helper"
+	"github.com/kubeflow/notebooks/workspaces/backend/internal/models/common"
 )
 
 func NewPodTemplateOptionsModelFromWorkspaceKind(wsk *kubefloworgv1beta1.WorkspaceKind, request *ListValuesRequest) (*PodTemplateOptions, error) {
-	var allValErrs field.ErrorList
+	var allValErrs field.ErrorList //nolint:prealloc
 
 	// calculate maps of "option id" -> "number of workspaces using that option in the cluster"
 	metricsMapImageConfig := calculateOptionMetricsMap(wsk.Status.PodTemplateOptions.ImageConfig)
@@ -106,6 +107,10 @@ func buildImageConfigValues(wsk *kubefloworgv1beta1.WorkspaceKind, request *List
 			Hidden:         ptr.Deref(value.Spawner.Hidden, false),
 			Redirect:       buildOptionRedirect(value.Redirect),
 			ClusterMetrics: buildClusterOptionMetrics(value.Id, optionMetricsMap),
+			//
+			// TODO: replace this with the calculation of the actual restriction!
+			//
+			Restrictions: common.DefaultRestrictions(),
 		})
 	}
 
@@ -158,6 +163,10 @@ func buildPodConfigValues(wsk *kubefloworgv1beta1.WorkspaceKind, request *ListVa
 			Hidden:         ptr.Deref(value.Spawner.Hidden, false),
 			Redirect:       buildOptionRedirect(value.Redirect),
 			ClusterMetrics: buildClusterOptionMetrics(value.Id, optionMetricsMap),
+			//
+			// TODO: replace this with the calculation of the actual restriction!
+			//
+			Restrictions: common.DefaultRestrictions(),
 		})
 	}
 
@@ -211,12 +220,12 @@ func buildOptionRedirect(redirect *kubefloworgv1beta1.OptionRedirect) *OptionRed
 	}
 }
 
-func buildClusterOptionMetrics(optionId string, optionMetricsMap map[string]int32) ClusterOptionMetrics {
+func buildClusterOptionMetrics(optionId string, optionMetricsMap map[string]int32) *ClusterOptionMetrics {
 	optionMetrics := ClusterOptionMetrics{}
 
 	if workspacesCount, ok := optionMetricsMap[optionId]; ok {
 		optionMetrics.Workspaces = workspacesCount
 	}
 
-	return optionMetrics
+	return &optionMetrics
 }
