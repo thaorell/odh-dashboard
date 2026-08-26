@@ -316,51 +316,41 @@ if [ "$CONTINUE_MODE" = true ]; then
     done
   fi
 
+  continue_commit=$(load_sync_state "CONFLICT_COMMIT")
+
   if git diff --cached --quiet; then
-    error_msg "No staged changes found"
-    echo -e "Please stage your resolved conflicts: ${YELLOW}git add $WORKSPACE_LOCATION${NC}"
-    clean_exit 1 "" true
-  fi
+    # No staged changes — check if this is a skip (patch had no applicable changes)
+    if [ -n "$continue_commit" ] && git diff --quiet -- "$WORKSPACE_LOCATION"; then
+      info_msg "No changes from patch — skipping commit $continue_commit"
 
-  info_msg "Committing staged changes..."
-
-  TARGET_COMMIT=$(git -C "$LOCAL_REPO_RESOLVED" rev-parse "$LOCAL_BRANCH")
-  if [ -n "$COMMIT_SHA" ]; then
-    TARGET_COMMIT="$COMMIT_SHA"
-  elif [ -n "$UP_TO_SHA" ]; then
-    TARGET_COMMIT="$UP_TO_SHA"
-  fi
-
-  if [ -n "$COMMIT_SHA" ]; then
-    continue_commit="$COMMIT_SHA"
-    continue_commit_msg=$(git -C "$LOCAL_REPO_RESOLVED" log -1 --format="%s" "$continue_commit")
-
-    git commit -q -m "${COMMIT_PREFIX}Update $PACKAGE_NAME: $continue_commit_msg (resolved conflicts)
-
-Upstream commit: $continue_commit"
-
-    success_msg "Committed resolved conflicts for $continue_commit: $continue_commit_msg"
-
-    if update_package_json_commit "$continue_commit"; then
-      if ! git add "$PACKAGE_JSON"; then
-        clean_exit 1 "Failed to stage package.json after committing conflicts"
+      if update_package_json_commit "$continue_commit"; then
+        if ! git add "$PACKAGE_JSON"; then
+          clean_exit 1 "Failed to stage package.json"
+        fi
+        git commit -q -m "${COMMIT_PREFIX}Update $PACKAGE_NAME tracking to $continue_commit (no file changes)"
+        info_msg "Updated package.json to track commit $continue_commit"
+      else
+        clean_exit 1 "Failed to update package.json"
       fi
-      git commit -q --amend --no-edit
-      info_msg "Updated package.json to track commit $continue_commit"
+
+      CURRENT_COMMIT="$continue_commit"
     else
-      clean_exit 1 "Failed to update package.json after committing conflicts"
-    fi
-  else
-    if ! git -C "$LOCAL_REPO_RESOLVED" merge-base --is-ancestor "$CURRENT_COMMIT" "$TARGET_COMMIT" 2>/dev/null; then
-      error_msg "Current commit $CURRENT_COMMIT not found in branch '$LOCAL_BRANCH' of $LOCAL_REPO_RESOLVED"
-      echo ""
-      echo "The local branch may be out of date. Rebase it and try again."
+      error_msg "No staged changes found"
+      echo -e "Please stage your resolved conflicts: ${YELLOW}git add $WORKSPACE_LOCATION${NC}"
       clean_exit 1 "" true
     fi
+  else
+    info_msg "Committing staged changes..."
 
-    commits=$(git -C "$LOCAL_REPO_RESOLVED" rev-list --reverse "$CURRENT_COMMIT..$TARGET_COMMIT")
-    if [ -n "$commits" ]; then
-      continue_commit=$(echo "$commits" | head -n 1)
+    TARGET_COMMIT=$(git -C "$LOCAL_REPO_RESOLVED" rev-parse "$LOCAL_BRANCH")
+    if [ -n "$COMMIT_SHA" ]; then
+      TARGET_COMMIT="$COMMIT_SHA"
+    elif [ -n "$UP_TO_SHA" ]; then
+      TARGET_COMMIT="$UP_TO_SHA"
+    fi
+
+    if [ -n "$COMMIT_SHA" ]; then
+      continue_commit="$COMMIT_SHA"
       continue_commit_msg=$(git -C "$LOCAL_REPO_RESOLVED" log -1 --format="%s" "$continue_commit")
 
       git commit -q -m "${COMMIT_PREFIX}Update $PACKAGE_NAME: $continue_commit_msg (resolved conflicts)
@@ -378,11 +368,43 @@ Upstream commit: $continue_commit"
       else
         clean_exit 1 "Failed to update package.json after committing conflicts"
       fi
-
-      CURRENT_COMMIT="$continue_commit"
     else
-      git commit -q -m "${COMMIT_PREFIX}Update $PACKAGE_NAME: Manual conflict resolution"
-      success_msg "Committed staged changes"
+      if ! git -C "$LOCAL_REPO_RESOLVED" merge-base --is-ancestor "$CURRENT_COMMIT" "$TARGET_COMMIT" 2>/dev/null; then
+        error_msg "Current commit $CURRENT_COMMIT not found in branch '$LOCAL_BRANCH' of $LOCAL_REPO_RESOLVED"
+        echo ""
+        echo "The local branch may be out of date. Rebase it and try again."
+        clean_exit 1 "" true
+      fi
+
+      if [ -z "$continue_commit" ]; then
+        local fallback_commits
+        fallback_commits=$(git -C "$LOCAL_REPO_RESOLVED" rev-list --reverse "$CURRENT_COMMIT..$TARGET_COMMIT")
+        continue_commit=$(echo "$fallback_commits" | head -n 1)
+      fi
+      if [ -n "$continue_commit" ]; then
+        continue_commit_msg=$(git -C "$LOCAL_REPO_RESOLVED" log -1 --format="%s" "$continue_commit")
+
+        git commit -q -m "${COMMIT_PREFIX}Update $PACKAGE_NAME: $continue_commit_msg (resolved conflicts)
+
+Upstream commit: $continue_commit"
+
+        success_msg "Committed resolved conflicts for $continue_commit: $continue_commit_msg"
+
+        if update_package_json_commit "$continue_commit"; then
+          if ! git add "$PACKAGE_JSON"; then
+            clean_exit 1 "Failed to stage package.json after committing conflicts"
+          fi
+          git commit -q --amend --no-edit
+          info_msg "Updated package.json to track commit $continue_commit"
+        else
+          clean_exit 1 "Failed to update package.json after committing conflicts"
+        fi
+
+        CURRENT_COMMIT="$continue_commit"
+      else
+        git commit -q -m "${COMMIT_PREFIX}Update $PACKAGE_NAME: Manual conflict resolution"
+        success_msg "Committed staged changes"
+      fi
     fi
   fi
 
@@ -561,10 +583,17 @@ _filter_rev_list() {
   local from_commit="$1"
   local to_commit="$2"
   local upstream_subdir="$3"
+  local also_exclude="${4:-}"
+
+  local exclude_args=("^$from_commit")
+  if [ -n "$also_exclude" ] && [ "$also_exclude" != "$from_commit" ]; then
+    exclude_args+=("^$also_exclude")
+  fi
+
   if [ -n "$upstream_subdir" ]; then
-    git -C "$LOCAL_REPO_RESOLVED" rev-list --no-merges --reverse "$from_commit..$to_commit" -- "$upstream_subdir"
+    git -C "$LOCAL_REPO_RESOLVED" rev-list --no-merges --reverse "$to_commit" "${exclude_args[@]}" -- "$upstream_subdir"
   else
-    git -C "$LOCAL_REPO_RESOLVED" rev-list --no-merges --reverse "$from_commit..$to_commit"
+    git -C "$LOCAL_REPO_RESOLVED" rev-list --no-merges --reverse "$to_commit" "${exclude_args[@]}"
   fi
 }
 
@@ -603,6 +632,10 @@ _post_iteration_hook() {
 
 if [ ! -d "$TARGET_DIR" ]; then
   mkdir -p "$TARGET_DIR"
+fi
+
+if [ "$CONTINUE_MODE" != true ]; then
+  clear_sync_state
 fi
 
 TMP_DIR=$(mktemp -d)

@@ -121,6 +121,42 @@ clean_exit() {
   exit $exit_code
 }
 
+# ── Sync state (persists across --continue) ──────────────────────
+# Tracks the original from_commit so that ancestor exclusion remains
+# consistent even when --continue advances tracking to a commit on a
+# different branch (non-linear upstream history).
+
+_sync_state_file() {
+  echo "$MONOREPO_ROOT/$WORKSPACE_LOCATION/.subtree-sync-state"
+}
+
+save_sync_state() {
+  local key="$1" value="$2"
+  local state_file
+  state_file=$(_sync_state_file)
+  if [ -f "$state_file" ] && grep -q "^$key=" "$state_file" 2>/dev/null; then
+    local temp_file="${state_file}.tmp"
+    grep -v "^$key=" "$state_file" > "$temp_file" 2>/dev/null || true
+    echo "$key=$value" >> "$temp_file"
+    mv "$temp_file" "$state_file"
+  else
+    echo "$key=$value" >> "$state_file"
+  fi
+}
+
+load_sync_state() {
+  local key="$1"
+  local state_file
+  state_file=$(_sync_state_file)
+  if [ -f "$state_file" ]; then
+    grep "^$key=" "$state_file" 2>/dev/null | cut -d= -f2
+  fi
+}
+
+clear_sync_state() {
+  rm -f "$(_sync_state_file)"
+}
+
 # ── Working-tree check ───────────────────────────────────────────
 
 check_working_tree_clean() {
@@ -434,11 +470,18 @@ apply_patch_based_update() {
     fi
   fi
 
+  local original_from
+  original_from=$(load_sync_state "ORIGINAL_FROM")
+  if [ -z "$original_from" ] || [ "$original_from" = "$from_commit" ]; then
+    save_sync_state "ORIGINAL_FROM" "$from_commit"
+    original_from="$from_commit"
+  fi
+
   local commits
   if [ "$single_commit_mode" = true ]; then
     commits="$to_commit"
   else
-    commits=$(_filter_rev_list "$from_commit" "$to_commit" "$upstream_subdir")
+    commits=$(_filter_rev_list "$from_commit" "$to_commit" "$upstream_subdir" "$original_from")
   fi
 
   if [ -z "$commits" ]; then
@@ -536,6 +579,8 @@ Upstream commit: $commit" "$WORKSPACE_LOCATION/$TARGET_RELATIVE"
 
     _post_iteration_hook
   done
+
+  clear_sync_state
 }
 
 # ── Conflict resolution handler ─────────────────────────────────
@@ -708,5 +753,6 @@ handle_apply_conflict() {
   info_msg "Progress: Applied $((commit_count - 1))/$total_commits commits successfully"
   info_msg "Failed on commit: $commit ($commit_count/$total_commits)"
   info_msg "Remaining: $((total_commits - commit_count + 1)) commits"
+  save_sync_state "CONFLICT_COMMIT" "$commit"
   clean_exit 1 "" true
 }

@@ -238,62 +238,84 @@ if [ "$CONTINUE_MODE" = true ]; then
     done
   fi
 
+  continue_commit=$(load_sync_state "CONFLICT_COMMIT")
+
   if git diff --cached --quiet; then
-    error_msg "No staged changes found"
-    echo -e "Please stage your resolved conflicts: ${YELLOW}git add $WORKSPACE_LOCATION${NC}"
-    clean_exit 1 "" true
-  fi
+    # No staged changes — check if this is a skip (patch had no applicable changes)
+    if [ -n "$continue_commit" ] && git diff --quiet -- "$WORKSPACE_LOCATION"; then
+      info_msg "No changes from patch — skipping commit $continue_commit"
 
-  info_msg "Committing staged changes..."
+      if update_package_json_commit "$continue_commit"; then
+        if ! git add "$PACKAGE_JSON"; then
+          clean_exit 1 "Failed to stage package.json"
+        fi
+        git commit -q -m "${COMMIT_PREFIX}Update $PACKAGE_NAME tracking to $continue_commit (no file changes)"
+        info_msg "Updated package.json to track commit $continue_commit"
+      else
+        clean_exit 1 "Failed to update package.json"
+      fi
 
-  TMP_DIR=$(mktemp -d)
-  trap 'cd "$MONOREPO_ROOT"; rm -rf "$TMP_DIR"' EXIT
-
-  git clone -q -b "$UPSTREAM_BRANCH" "$UPSTREAM_REPO" "$TMP_DIR/repo"
-  cd "$TMP_DIR/repo"
-
-  if [ -n "$COMMIT_SHA" ]; then
-    git checkout -q "$COMMIT_SHA"
-    TARGET_COMMIT=$(git rev-parse HEAD)
+      CURRENT_COMMIT="$continue_commit"
+    else
+      error_msg "No staged changes found"
+      echo -e "Please stage your resolved conflicts: ${YELLOW}git add $WORKSPACE_LOCATION${NC}"
+      clean_exit 1 "" true
+    fi
   else
-    TARGET_COMMIT=$(git rev-parse HEAD)
-  fi
+    info_msg "Committing staged changes..."
 
-  if ! git merge-base --is-ancestor "$CURRENT_COMMIT" HEAD 2>/dev/null; then
-    cd "$MONOREPO_ROOT"
-    error_msg "Current commit $CURRENT_COMMIT not found in branch '$UPSTREAM_BRANCH' of $UPSTREAM_REPO"
-    echo ""
-    echo "You are probably syncing from a temporarily overridden repo and branch for an"
-    echo "unmerged PR. The PR's branch may be out of date. Rebase it and try again."
-    clean_exit 1 "" true
-  fi
+    TMP_DIR=$(mktemp -d)
+    trap 'cd "$MONOREPO_ROOT"; rm -rf "$TMP_DIR"' EXIT
 
-  commits=$(git rev-list --reverse "$CURRENT_COMMIT..$TARGET_COMMIT")
-  if [ -n "$commits" ]; then
-    continue_commit=$(echo "$commits" | head -n 1)
-    continue_commit_msg=$(git log -1 --format="%s" "$continue_commit")
+    git clone -q -b "$UPSTREAM_BRANCH" "$UPSTREAM_REPO" "$TMP_DIR/repo"
+    cd "$TMP_DIR/repo"
 
-    cd "$MONOREPO_ROOT"
-    git commit -q -m "${COMMIT_PREFIX}Update $PACKAGE_NAME: $continue_commit_msg (resolved conflicts)
+    if [ -n "$COMMIT_SHA" ]; then
+      git checkout -q "$COMMIT_SHA"
+      TARGET_COMMIT=$(git rev-parse HEAD)
+    else
+      TARGET_COMMIT=$(git rev-parse HEAD)
+    fi
+
+    if ! git merge-base --is-ancestor "$CURRENT_COMMIT" HEAD 2>/dev/null; then
+      cd "$MONOREPO_ROOT"
+      error_msg "Current commit $CURRENT_COMMIT not found in branch '$UPSTREAM_BRANCH' of $UPSTREAM_REPO"
+      echo ""
+      echo "You are probably syncing from a temporarily overridden repo and branch for an"
+      echo "unmerged PR. The PR's branch may be out of date. Rebase it and try again."
+      clean_exit 1 "" true
+    fi
+
+    if [ -z "$continue_commit" ]; then
+      local fallback_commits
+      fallback_commits=$(git rev-list --reverse "$CURRENT_COMMIT..$TARGET_COMMIT")
+      continue_commit=$(echo "$fallback_commits" | head -n 1)
+    fi
+    if [ -n "$continue_commit" ]; then
+      continue_commit_msg=$(git log -1 --format="%s" "$continue_commit")
+
+      cd "$MONOREPO_ROOT"
+      git commit -q -m "${COMMIT_PREFIX}Update $PACKAGE_NAME: $continue_commit_msg (resolved conflicts)
 
 Upstream commit: $continue_commit"
 
-    success_msg "Committed resolved conflicts for $continue_commit: $continue_commit_msg"
+      success_msg "Committed resolved conflicts for $continue_commit: $continue_commit_msg"
 
-    if update_package_json_commit "$continue_commit"; then
-      if ! git add "$PACKAGE_JSON"; then
-        clean_exit 1 "Failed to stage package.json after committing conflicts"
+      if update_package_json_commit "$continue_commit"; then
+        if ! git add "$PACKAGE_JSON"; then
+          clean_exit 1 "Failed to stage package.json after committing conflicts"
+        fi
+        git commit -q --amend --no-edit
+        info_msg "Updated package.json to track commit $continue_commit"
+      else
+        clean_exit 1 "Failed to update package.json after committing conflicts"
       fi
-      git commit -q --amend --no-edit
-      info_msg "Updated package.json to track commit $continue_commit"
-    else
-      clean_exit 1 "Failed to update package.json after committing conflicts"
-    fi
 
-    CURRENT_COMMIT="$continue_commit"
-  else
-    git commit -q -m "${COMMIT_PREFIX}Update $PACKAGE_NAME: Manual conflict resolution"
-    success_msg "Committed staged changes"
+      CURRENT_COMMIT="$continue_commit"
+    else
+      git commit -q -m "${COMMIT_PREFIX}Update $PACKAGE_NAME: Manual conflict resolution"
+      success_msg "Committed staged changes"
+    fi
   fi
 
 else
@@ -375,7 +397,13 @@ _git_upstream_cmd() {
 _filter_rev_list() {
   local from_commit="$1"
   local to_commit="$2"
-  git rev-list --no-merges --reverse "$from_commit..$to_commit"
+  # $3 is upstream_subdir (unused in remote script)
+  local also_exclude="${4:-}"
+  if [ -n "$also_exclude" ] && [ "$also_exclude" != "$from_commit" ]; then
+    git rev-list --no-merges --reverse "$to_commit" "^$from_commit" "^$also_exclude"
+  else
+    git rev-list --no-merges --reverse "$from_commit..$to_commit"
+  fi
 }
 
 _get_commit_url() {
@@ -402,6 +430,10 @@ _post_iteration_hook() {
 
 if [ ! -d "$TARGET_DIR" ]; then
   mkdir -p "$TARGET_DIR"
+fi
+
+if [ "$CONTINUE_MODE" != true ]; then
+  clear_sync_state
 fi
 
 apply_patch_based_update "$CURRENT_COMMIT" "$TARGET_COMMIT" "$UPSTREAM_SUBDIR" "$TARGET_DIR"
