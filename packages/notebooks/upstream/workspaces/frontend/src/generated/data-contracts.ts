@@ -3612,7 +3612,7 @@ export interface V1Beta1ImageConfigSpec {
   /**
    * the container image to use
    * +kubebuilder:validation:MinLength:=2
-   * +kubeflow:example="ghcr.io/kubeflow/kubeflow/notebook-servers/jupyter-scipy:v1.7.0"
+   * +kubeflow:example="ghcr.io/kubeflow/kubeflow/notebook-servers/jupyter-scipy:v1.7.0@sha256:6bf26b8dd45fc0f54aa3d85a141f80967e73d64d8a980f367c1e67a10b0e31a1"
    */
   image: string;
   /**
